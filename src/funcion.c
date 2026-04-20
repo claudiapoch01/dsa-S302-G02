@@ -1,9 +1,5 @@
 #include "sample_lib.h"
 
-int prueba() {
-    return 1;
-}
-
 int minimo(int a, int b, int c) {
     int m = a;
     if (b < m) m = b;
@@ -29,8 +25,8 @@ int distancia_levenshtein(char *s1, char *s2) {
 
 // Reemplaza "C." o "C/" por "Carrer" para mejorar la búsqueda
 void normalizar_nombre(char *dest, const char *src) {
-    if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
-        strcpy(dest, "Carrer ");
+    if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) { // Busca si la cadena tiene c. o c/
+        strcpy(dest, "Carrer "); // si lo encuentra, lo reemplaza por "Carrer "
         strcat(dest, src + 3);
     } else {
         strcpy(dest, src);
