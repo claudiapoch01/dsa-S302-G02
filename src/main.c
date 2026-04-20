@@ -1,5 +1,6 @@
 #include "sample_lib.h"
 #include <sys/stat.h>
+#include <stdio.h>
 
 void createleak(){
     char *foo = malloc(20 * sizeof(char)); 
