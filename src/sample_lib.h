@@ -6,6 +6,7 @@
 #include <string.h>
 #include <ctype.h>
 
+// Estructura para casas
 typedef struct House {
     char street_name[100]; 
     int house_number; 
@@ -14,11 +15,22 @@ typedef struct House {
     struct House *next; 
 } House;
 
-// Funciones de utilidad y lógica
+// --- NUEVO: Estructura para lugares ---
+typedef struct Place {
+    char name[150];
+    double latitud;
+    double longitud;
+    struct Place *next;
+} Place;
+
+// Prototipos existentes
 int distancia_levenshtein(char *s1, char *s2);
 House* cargar_mapa(char *path, int *total);
-void normalizar_nombre(char *dest, const char *src);
 void buscar_direccion(House *lista);
-void liberar_lista(House *lista);
+
+// --- NUEVO: Prototipos para lugares ---
+Place* cargar_lugares(char *path, int *total);
+void buscar_lugar(Place *lista);
+void liberar_lugares(Place *lista);
 
 #endif
