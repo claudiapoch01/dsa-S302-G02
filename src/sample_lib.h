@@ -32,5 +32,6 @@ void buscar_direccion(House *lista);
 Place* cargar_lugares(char *path, int *total);
 void buscar_lugar(Place *lista);
 void liberar_lugares(Place *lista);
+void liberar_lista(House *lista);
 
 #endif
