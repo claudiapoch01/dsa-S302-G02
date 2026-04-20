@@ -44,7 +44,10 @@ void normalizar_nombre(char *dest, const char *src) {
 
 House* cargar_mapa(char *path, int *total) {
     FILE *f = fopen(path, "r");
-    if (f == NULL) return NULL;
+    if (f == NULL) {
+        printf("DEBUG: No se pudo abrir el archivo en la ruta: %s\n", path);
+        return NULL;
+    }
 
     House *cabeza = NULL;
     char linea[256];
@@ -52,15 +55,24 @@ House* cargar_mapa(char *path, int *total) {
 
     while (fgets(linea, sizeof(linea), f)) {
         House *nueva = (House*)malloc(sizeof(House));
-        if (sscanf(linea, "%[^;];%d;%lf;%lf", nueva->street_name, &nueva->house_number, &nueva->latitud, &nueva->longitud) == 4) {
+        if (nueva == NULL) break;
+
+        // Intentamos leer: Nombre;Numero;Latitud;Longitud
+        // Esta versión lee: Nombre (hasta el ;) ; Número ; Latitud ; Longitud
+    if (sscanf(linea, "%[^,],%d,%lf,%lf", nueva->street_name, &nueva->house_number, &nueva->latitud, &nueva->longitud) == 4) {
             nueva->next = cabeza;
             cabeza = nueva;
             (*total)++;
         } else {
-            free(nueva);
+            free(nueva); // Línea mal formateada o vacía, la ignoramos
         }
     }
     fclose(f);
+    
+    if (*total == 0) {
+        printf("DEBUG: El archivo se abrio pero no se leyo ninguna casa. Revisa el formato.\n");
+    }
+    
     return cabeza;
 }
 
@@ -124,7 +136,9 @@ Place* cargar_lugares(char *path, int *total) {
 
     while (fgets(linea, sizeof(linea), f)) {
         Place *nuevo = (Place*)malloc(sizeof(Place));
-        if (sscanf(linea, "%[^;];%lf;%lf", nuevo->name, &nuevo->latitud, &nuevo->longitud) == 3) {
+        if (nuevo == NULL) break;
+        printf("DEBUG: Leyendo linea: %s", linea); // Añade esto para ver qué lee el programa
+        if (sscanf(linea, " %[^,],%lf,%lf", nuevo->name, &nuevo->latitud, &nuevo->longitud) >= 3) {
             nuevo->next = cabeza;
             cabeza = nuevo;
             (*total)++;
@@ -138,8 +152,9 @@ Place* cargar_lugares(char *path, int *total) {
 
 void buscar_lugar(Place *lista) {
     char search_name[150];
+    
     printf("Enter place name: ");
-    getchar(); 
+    // El getchar() SOLO va aquí si no lo pusiste en el main
     fgets(search_name, 150, stdin);
     search_name[strcspn(search_name, "\n")] = 0;
 
@@ -148,10 +163,13 @@ void buscar_lugar(Place *lista) {
     int min_dist = 100;
 
     while (actual != NULL) {
+        // Comparamos sin importar mayúsculas
         if (strcasecmp(actual->name, search_name) == 0) {
             printf("\n    Found at (%lf, %lf)\n", actual->latitud, actual->longitud);
             return;
         }
+        
+        // Lógica de Levenshtein para sugerencias
         int d = distancia_levenshtein(search_name, actual->name);
         if (d < min_dist) {
             min_dist = d;
