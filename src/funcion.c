@@ -138,11 +138,13 @@ Place* cargar_lugares(char *path, int *total) {
         Place *nuevo = (Place*)malloc(sizeof(Place));
         if (nuevo == NULL) break;
         printf("DEBUG: Leyendo linea: %s", linea); // Añade esto para ver qué lee el programa
-        if (sscanf(linea, " %[^,],%lf,%lf", nuevo->name, &nuevo->latitud, &nuevo->longitud) >= 3) {
-            nuevo->next = cabeza;
-            cabeza = nuevo;
-            (*total)++;
-        } else {
+        // Ignora código, lee nombre, ignora tipo, lee latitud, lee longitud
+    if (sscanf(linea, "%*[^,],%[^,],%*[^,],%lf,%lf", nuevo->name, &nuevo->latitud, &nuevo->longitud) == 3) {
+        nuevo->next = cabeza;
+        cabeza = nuevo;
+        (*total)++;
+    }
+        else {
             free(nuevo);
         }
     }
