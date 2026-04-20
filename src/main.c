@@ -1,71 +1,38 @@
 #include "sample_lib.h"
-#include <sys/stat.h>
-#include <stdio.h>
 
-void createleak(){
-    char *foo = malloc(20 * sizeof(char)); 
-    printf("Allocated leaking string: %s", foo); 
+int main() {
+    char map_name[20], path[150];
+    int total_houses = 0;
+    int opcion;
 
-}
+    printf("Enter map name (e.g. 'xs_2' or 'xl_1'): ");
+    scanf("%s", map_name);
 
-typedef struct House{
-    char  street_name[100]; 
-    int house_number; 
-    double latitud; 
-    double longitud; 
-    struct House *next; 
-} House; 
+    sprintf(path, "maps/%s/houses.txt", map_name);
+    House *lista_casas = cargar_mapa(path, &total_houses);
 
-int main(){
-char map_name[10]; 
-char path[150]; 
-char search_street[100]; 
-int search_nummber; 
-char origin_position[20]; 
-
-// Primer demanem el mapa a l'usuari 
-    printf("Enter map name (e.g. 'xs_2' or 'xl_1'):");
-    scanf("%s", map_name);  
-
-    //Obrim el fitxer de houses.txt 
-    sprintf(path, "maps/%s/houses.txt", map_name); 
-    FILE *f = fopen(path,"r"); 
-    
-    if (f == NULL){
-        printf("Error per obrir el fitxer %s\n", path); 
-        return 1; 
+    if (lista_casas == NULL) {
+        printf("Error: Could not open map %s\n", path);
+        return 1;
     }
+    printf("%d houses loaded\n\n", total_houses);
 
-    printf("Com vols introduir l'origen? (adreça, coordenada, lloc): ");
-    fgets(origin_position, sizeof(origin_position), stdin);
-    
-    // Treure el salt de línia final
-    origin_position[strcspn(origin_position, "\n")] = '\0';
-    
-    // Convertir a minúscules per comparar sense distingir majúscules
-    for (int i = 0; origin_position[i]; i++) {
-        origin_position[i] = tolower(origin_position[i]);
-    }
-    
-    switch (origin_position[0]) {  // Comparem només la primera lletra per simplificar
-        case 'a':  // adreça
-            printf("Has triat adreça. Demanaré carrer i número...\n");
-            // Aquí crides a la funció que demana carrer i número
+    printf("--- ORIGIN ---\n");
+    printf("Where are you? Address (1), Place (2) or Coordinate (3)? ");
+    scanf("%d", &opcion);
+
+    switch (opcion) {
+        case 1:
+            buscar_direccion(lista_casas);
             break;
-            
-        case 'c':  // coordenada
-            printf("Not implemented yet\n");
+        case 2:
+        case 3:
+            printf("Not implemented yet.\n");
             break;
-            
-        case 'l':  // lloc
-            printf("Not implemented yet\n");
-            break;
-            
         default:
-            printf("Opció no vàlida\n");
-            break;
+            printf("Invalid option.\n");
     }
-    
-    return 0;
 
+    liberar_lista(lista_casas);
+    return 0;
 }

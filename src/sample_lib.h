@@ -6,7 +6,6 @@
 #include <string.h>
 #include <ctype.h>
 
-// 1. La estructura para guardar las calles (lista enlazada)
 typedef struct House {
     char street_name[100]; 
     int house_number; 
@@ -15,19 +14,11 @@ typedef struct House {
     struct House *next; 
 } House;
 
-// 2. Prototipos de tus funciones (las que irán en functions.c)
-
-// Para Levenshtein
-int minimo(int a, int b, int c);
+// Funciones de utilidad y lógica
 int distancia_levenshtein(char *s1, char *s2);
-
-// Para buscar sugerencias
-void buscar_con_sugerencias(char *busqueda, House *lista);
-
-// Para cargar el mapa desde el archivo houses.txt
-House* cargar_mapa(char *path);
-
-// (Opcional)
-int fact(int n); 
+House* cargar_mapa(char *path, int *total);
+void normalizar_nombre(char *dest, const char *src);
+void buscar_direccion(House *lista);
+void liberar_lista(House *lista);
 
 #endif
