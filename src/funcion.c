@@ -1,5 +1,9 @@
 #include "sample_lib.h"
 
+int prueba() {
+    return 1;
+}
+
 int minimo(int a, int b, int c) {
     int m = a;
     if (b < m) m = b;
