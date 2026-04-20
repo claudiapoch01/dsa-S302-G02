@@ -29,7 +29,7 @@ int distancia_levenshtein(char *s1, char *s2) {
 
 // Reemplaza "C." o "C/" por "Carrer" para mejorar la búsqueda
 void normalizar_nombre(char *dest, const char *src) {
-    if (strncmp(src, "C. ", 3) == 0 || strncmp(src, "c. ", 3) == 0 || strncmp(src, "C/ ", 3) == 0) {
+    if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
         strcpy(dest, "Carrer ");
         strcat(dest, src + 3);
     } else {
