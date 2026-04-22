@@ -35,7 +35,7 @@ int main() {
     printf("Where are you? Address (1), Place (2) or Coordinate (3)? ");
     scanf("%d", &opcion);
     
-    // Limpiamos el buffer UNA VEZ para todos los casos
+    // Limpiamos la memoria
     getchar(); 
 
     switch (opcion) {
