@@ -43,7 +43,6 @@ printf("Where are you? Address (1), Place (2) or Coordinate (3)? ");
             buscar_direccion(lista_casas);
             break;
         case 2: // Caso 2: lugar
-            // Ya no necesitas el getchar aquí porque lo hemos puesto arriba
             buscar_lugar(lista_lugares);
             break;
         case 3: // Caso 3: coordenada
