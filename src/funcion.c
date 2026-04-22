@@ -1,6 +1,6 @@
 #include "sample_lib.h"
 
-// --- UTILIDADES ---
+// utilidades
 
 int minimo(int a, int b, int c) {
     int m = a;
@@ -54,7 +54,7 @@ void leer_cadena_segura(char *buffer, int size) {
     }
 }
 
-// --- GESTIÓN DE CASAS (ADDRESS) ---
+// funciones para gestionar casas
 
 House* cargar_mapa(char *path, int *total) {
     FILE *f = fopen(path, "r");
@@ -136,7 +136,7 @@ void buscar_direccion(House *lista) {
     }
 }
 
-// --- GESTIÓN DE LUGARES (PLACE) ---
+// funciones para gestionar lugares
 
 Place* cargar_lugares(char *path, int *total) {
     FILE *f = fopen(path, "r");
@@ -166,7 +166,6 @@ void buscar_lugar(Place *lista) {
     char search_name[150];
     
     printf("Enter place name: ");
-    // El getchar() SOLO va aquí si no lo pusiste en el main
     fgets(search_name, 150, stdin);
     search_name[strcspn(search_name, "\n")] = 0;
 
@@ -196,7 +195,7 @@ void buscar_lugar(Place *lista) {
     }
 }
 
-// --- LIBERACIÓN DE MEMORIA ---
+//funciones para liberar la memoria
 
 void liberar_lista(House *lista) {
     while (lista) {
