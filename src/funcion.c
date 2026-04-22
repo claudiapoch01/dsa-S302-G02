@@ -166,7 +166,7 @@ void leer_cadena_segura(char *buffer, int size) {
         } else {
             // si el usuario ha metido muchos caracteres, se eliminan los que sobran 
             int c;
-            while ((c = getchar()) != '\n' && c != EOF);
+            while ((c = getchar()) != '\n');
         }
     }
 }
@@ -252,7 +252,10 @@ void buscar_direccion(House *lista) {
         
         // aqui lista los números válidos
         printf("Enter one of the valid numbers: ");
-        scanf("%d", &num_search);
+        while (scanf("%d", &num_search) != 1) { // <--- Añade esta validación aquí también
+            printf("Invalid input. Please enter a numeric value: ");
+            int c; while ((c = getchar()) != '\n');
+        }
         
         //si el usuario escribe un número incorrecto, vuelve a preguntar
         actual = lista;
@@ -302,8 +305,12 @@ void buscar_lugar(Place *lista) {
     strcpy(search_name_normalizado, search_name);
     quitar_acentos(search_name_normalizado); // eliminamos acentos del lugar escrito por el usuario
     
-    Place *actual = lista;
-    Place *mejor_sug = NULL;
+    Place *actual = lista; 
+
+    Place *coincidencias[50]; // llista per guardar tots els llocs possibles
+    int num_coincidencias = 0; // mida del array anterior
+
+    Place *mejor_lugar = NULL;
     int min_dist = 100;
 
     while (actual != NULL) {
@@ -312,21 +319,44 @@ void buscar_lugar(Place *lista) {
         quitar_acentos(place_sin_acentos); // eliminamos acentos del lugar del documento
 
         if (strcasecmp(place_sin_acentos, search_name_normalizado) == 0) {
-            printf("\n    Found at (%lf, %lf)\n", actual->latitud, actual->longitud);
-            return;
+            if (num_coincidencias < 50) {
+                coincidencias[num_coincidencias] = actual;
+                num_coincidencias++;
+            }
         }
         
         int d = distancia_levenshtein(search_name, actual->name);
         if (d < min_dist) {
             min_dist = d;
-            mejor_sug = actual;
+            mejor_lugar = actual;
         }
         actual = actual->next;
     }
+    // comprobamos si hay varios lugares que se llaman igual
+    if (num_coincidencias == 1) { // si solo hay uno, lo muestra
+        printf("\n    Found at (%lf, %lf)\n", coincidencias[0]->latitud, coincidencias[0]->longitud);
+    } else if (num_coincidencias > 1) { // si hay varios, deja elegir
 
-    if (mejor_sug != NULL && min_dist < 10) {
-        printf("Place not found. Did you mean: %s?\n", mejor_sug->name);
-    } else {
+        printf("\nMultiple places found with that name:\n");
+
+        // por cada una de las coincidencias, muestra su nombre y coordenadas para que el usuario pueda elegir
+        for (int i = 0; i < num_coincidencias; i++) { 
+            printf("%d. %s at (%lf, %lf)\n", i + 1, coincidencias[i]->name, coincidencias[i]->latitud, coincidencias[i]->longitud);
+        }
+        
+        int seleccion;
+        printf("Choose one (1-%d): ", num_coincidencias); // pide al usuario que elija un lugar por su número
+        while (scanf("%d", &seleccion) != 1 || seleccion < 1 || seleccion > num_coincidencias) {
+            printf("Invalid selection. Please choose a number between 1 and %d: ", num_coincidencias);
+            int c; while ((c = getchar()) != '\n');
+        }
+        
+        printf("\n    Selected: %s at (%lf, %lf)\n", coincidencias[seleccion - 1]->name, coincidencias[seleccion - 1]->latitud, coincidencias[seleccion - 1]->longitud);
+    } 
+    else if (mejor_lugar != NULL && min_dist < 10) {
+        printf("Place not found. Did you mean: %s?\n", mejor_lugar->name);
+    } 
+    else {
         printf("Place not found.\n");
     }
 }
