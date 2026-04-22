@@ -84,12 +84,12 @@ void quitar_acentos(char *cadena) {
 
 // normaliza el nombre (cambia 'c.', 'c/', 'carrer de', etc. por 'carrer')
 void normalizar_nombre(char *dest, const char *src) {
-    // 1. Manejo de CARRER (C., C/, C , Carrer de)
+    // se usa la funcion strncasecmp que es como strncmp pero ignora mayúsculas y minúsculas
+    // comprueba las abreviaturas de calle (C., C/, etc) y las normaliza a 'Carrer'
     if (strncasecmp(src, "C. de ", 6) == 0 || strncasecmp(src, "C/ de ", 6) == 0) {
         strcpy(dest, "Carrer ");
         strcat(dest, src + 6);
-    } 
-    else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0 || strncasecmp(src, "C ", 2) == 0) {
+    } else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0 || strncasecmp(src, "C ", 2) == 0) {
         strcpy(dest, "Carrer ");
         if (src[1] == '.' || src[1] == '/') strcat(dest, src + 3);
         else strcat(dest, src + 2);
