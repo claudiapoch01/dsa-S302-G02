@@ -57,8 +57,6 @@ House* cargar_mapa(char *path, int *total) {
         House *nueva = (House*)malloc(sizeof(House));
         if (nueva == NULL) break;
 
-        // Intentamos leer: Nombre;Numero;Latitud;Longitud
-        // Esta versión lee: Nombre (hasta el ;) ; Número ; Latitud ; Longitud
     if (sscanf(linea, "%[^,],%d,%lf,%lf", nueva->street_name, &nueva->house_number, &nueva->latitud, &nueva->longitud) == 4) {
             nueva->next = cabeza;
             cabeza = nueva;
@@ -67,12 +65,7 @@ House* cargar_mapa(char *path, int *total) {
             free(nueva); // Línea mal formateada o vacía, la ignoramos
         }
     }
-    fclose(f);
-    
-    if (*total == 0) {
-        printf("DEBUG: El archivo se abrio pero no se leyo ninguna casa. Revisa el formato.\n");
-    }
-    
+    fclose(f);    
     return cabeza;
 }
 
@@ -137,8 +130,6 @@ Place* cargar_lugares(char *path, int *total) {
     while (fgets(linea, sizeof(linea), f)) {
         Place *nuevo = (Place*)malloc(sizeof(Place));
         if (nuevo == NULL) break;
-        printf("DEBUG: Leyendo linea: %s", linea); // Añade esto para ver qué lee el programa
-        // Ignora código, lee nombre, ignora tipo, lee latitud, lee longitud
     if (sscanf(linea, "%*[^,],%[^,],%*[^,],%lf,%lf", nuevo->name, &nuevo->latitud, &nuevo->longitud) == 3) {
         nuevo->next = cabeza;
         cabeza = nuevo;
@@ -171,7 +162,6 @@ void buscar_lugar(Place *lista) {
             return;
         }
         
-        // Lógica de Levenshtein para sugerencias
         int d = distancia_levenshtein(search_name, actual->name);
         if (d < min_dist) {
             min_dist = d;
