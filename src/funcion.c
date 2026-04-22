@@ -93,7 +93,7 @@ void buscar_direccion(House *lista) {
     int num_search;
 
     printf("Enter street name: ");
-    getchar(); // Limpiar buffer de entrada
+    getchar(); //limpiar buffer de entrada
     fgets(raw_name, 100, stdin);
     raw_name[strcspn(raw_name, "\n")] = 0;
     normalizar_nombre(street_search, raw_name);
@@ -107,14 +107,14 @@ void buscar_direccion(House *lista) {
     int calle_exacta_encontrada = 0;
 
     while (actual != NULL) {
-        // Coincidencia de calle (sin importar mayúsculas)
-        if (strcasecmp(actual->street_name, street_search) == 0) {
+        if (strcasecmp(actual->street_name, street_search) == 0) { // comprueba si encuentra la calle
             calle_exacta_encontrada = 1;
-            if (actual->house_number == num_search) {
+            if (actual->house_number == num_search) { //comprueba si existe el número en esa calle
                 printf("\n    Found at (%lf, %lf)\n", actual->latitud, actual->longitud);
                 return;
             }
         }
+        
         int d = distancia_levenshtein(street_search, actual->street_name);
         if (d < min_dist) {
             min_dist = d;
@@ -123,14 +123,31 @@ void buscar_direccion(House *lista) {
         actual = actual->next;
     }
 
-    if (calle_exacta_encontrada) {
+    if (calle_exacta_encontrada) { // si la calle existe pero el número no, se le vuelve a pedir el número al usuario
         printf("Invalid number. Valid numbers in %s: ", street_search);
         actual = lista;
         while (actual != NULL) {
-            if (strcasecmp(actual->street_name, street_search) == 0) printf("%d ", actual->house_number);
+            if (strcasecmp(actual->street_name, street_search) == 0) {
+                printf("%d ", actual->house_number);
+            }
             actual = actual->next;
         }
         printf("\n");
+        
+        // aqui lista los números válidos
+        printf("Enter one of the valid numbers: ");
+        scanf("%d", &num_search);
+        
+        //si el usuario escribe un número incorrecto, vuelve a preguntar
+        actual = lista;
+        while (actual != NULL) {
+            if (strcasecmp(actual->street_name, street_search) == 0 && actual->house_number == num_search) {
+                printf("\n    Found at (%lf, %lf)\n", actual->latitud, actual->longitud);
+                return;
+            }
+            actual = actual->next;
+        }
+        printf("Still an invalid number.\n"); //si el número sigue siendo incorrecto, muestra el mensaje
     } else if (mejor_calle_nodo != NULL) {
         printf("Street not found. Did you mean: %s?\n", mejor_calle_nodo->street_name);
     }
