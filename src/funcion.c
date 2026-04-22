@@ -88,7 +88,8 @@ void normalizar_nombre(char *dest, const char *src) {
     // comprueba las abreviaturas de calle (C., C/, etc) y las normaliza a 'Carrer'
     if (strncasecmp(src, "C. de ", 6) == 0 || strncasecmp(src, "C/ de ", 6) == 0) {
         strcpy(dest, "Carrer ");
-        strcat(dest, src + 6);
+        //Se concatena el resto del string a partir de la posición 6, que es donde empieza el nombre de la calle
+        strcat(dest, src + 6); 
     } else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
         strcpy(dest, "Carrer ");
         strcat(dest, src + 3);
@@ -107,8 +108,7 @@ void normalizar_nombre(char *dest, const char *src) {
         strcpy(dest, src);
     }
 
-    // Finalmente, limpiamos acentos para que la búsqueda sea infalible
-    quitar_acentos(dest);
+    quitar_acentos(dest); // se eliminan los acentos
 }
 
 void leer_cadena_segura(char *buffer, int size) {
