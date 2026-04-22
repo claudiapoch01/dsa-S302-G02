@@ -33,11 +33,12 @@ int main() {
     // Muestra el menú de opciones (dirección, lugar o coordenada)
     printf("--- ORIGIN ---\n");
     printf("Where are you? Address (1), Place (2) or Coordinate (3)? ");
-    scanf("%d", &opcion);
+    while (scanf("%d", &opcion) != 1) {
+        printf("Invalid input. Please enter a number: ");
+        int c; while ((c = getchar()) != '\n'); // Limpia la memoria
+    }
+    int c; while ((c = getchar()) != '\n'); // limpiamos la memoria
     
-    // Limpiamos la memoria
-    getchar(); 
-
     switch (opcion) {
         case 1:  // Caso 1: dirección
             buscar_direccion(lista_casas);

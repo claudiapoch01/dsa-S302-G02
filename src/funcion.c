@@ -168,7 +168,7 @@ void buscar_direccion(House *lista) {
         int c; while ((c = getchar()) != '\n'); // borra el valor anterior
     }
 
-    while (getchar() != '\n'); // borramos el valor anterior
+    while (getchar() != '\n'); // borramos la memoria
 
     House *actual = lista;
     House *mejor_calle_nodo = NULL;
@@ -247,17 +247,24 @@ Place* cargar_lugares(char *path, int *total) {
 
 void buscar_lugar(Place *lista) {
     char search_name[150];
+    char search_name_normalizado[150];
     
     printf("Enter place name: ");
     leer_cadena_segura(search_name, 100);
 
+    strcpy(search_name_normalizado, search_name);
+    quitar_acentos(search_name_normalizado); // eliminamos acentos del lugar escrito por el usuario
+    
     Place *actual = lista;
     Place *mejor_sug = NULL;
     int min_dist = 100;
 
     while (actual != NULL) {
-        // Comparamos sin importar mayúsculas
-        if (strcasecmp(actual->name, search_name) == 0) {
+        char place_sin_acentos[150];
+        strcpy(place_sin_acentos, actual->name);
+        quitar_acentos(place_sin_acentos); // eliminamos acentos del lugar del documento
+
+        if (strcasecmp(place_sin_acentos, search_name_normalizado) == 0) {
             printf("\n    Found at (%lf, %lf)\n", actual->latitud, actual->longitud);
             return;
         }
