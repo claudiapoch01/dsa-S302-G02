@@ -184,8 +184,8 @@ void leer_cadena_segura(char *buffer, int size) {
 // funciones para gestionar casas
 
 House* cargar_mapa(char *path, int *total) {
-    FILE *f = fopen(path, "r");
-    if (f == NULL) {
+    FILE *f = fopen(path, "r"); //abre el mapa en modo de lectura
+    if (f == NULL) { // si no lo encuentra, muestra un mensaje de error
         printf("No se ha podido abrir el archivo: %s\n", path);
         return NULL;
     }
@@ -194,12 +194,12 @@ House* cargar_mapa(char *path, int *total) {
     char linea[256];
     *total = 0;
 
-    while (fgets(linea, sizeof(linea), f)) {
+    while (fgets(linea, sizeof(linea), f)) { // lee el archivo línea por línea
         char nombre_calle[100]; 
         int num;
         double lat, lon;
         
-        if (sscanf(linea, "%[^,],%d,%lf,%lf", nombre_calle, &num, &lat, &lon) == 4) {
+        if (sscanf(linea, "%[^,],%d,%lf,%lf", nombre_calle, &num, &lat, &lon) == 4) { // si la línea tiene el formato correcto, se procesa
             char calle_normalizada[100];
             normalizar_nombre(calle_normalizada, sizeof(calle_normalizada), nombre_calle); // normalizamos el nombre
             
@@ -241,6 +241,7 @@ void buscar_direccion(House *lista) {
             }
         }
         
+        // calcula la distancia de Levenshtein para sugerir la calle más parecida en caso de que no se encuentre la calle exacta
         int d = distancia_levenshtein(street_search, actual->street_name);
         if (d < min_dist) {
             min_dist = d;
@@ -317,8 +318,8 @@ void buscar_lugar(Place *lista) {
     
     Place *actual = lista; 
 
-    Place *coincidencias[50]; // llista per guardar tots els llocs possibles
-    int num_coincidencias = 0; // mida del array anterior
+    Place *coincidencias[50]; // lista para guardar las diferentes coincidencias
+    int num_coincidencias = 0; // medida del array anterior
 
     Place *mejor_lugar = NULL;
     int min_dist = 100;
@@ -328,13 +329,14 @@ void buscar_lugar(Place *lista) {
         strcpy(place_sin_acentos, actual->name);
         quitar_acentos(place_sin_acentos); // eliminamos acentos del lugar del documento
 
-        if (strcasecmp(place_sin_acentos, search_name_normalizado) == 0) {
+        if (strcasecmp(place_sin_acentos, search_name_normalizado) == 0) { // si el nombre coincide, se guarda en la lista
             if (num_coincidencias < 50) {
                 coincidencias[num_coincidencias] = actual;
                 num_coincidencias++;
             }
         }
-        
+
+        // calcula la distancia de Levenshtein para sugerir el lugar más parecido en caso de que no se encuentre el lugar exacto
         int d = distancia_levenshtein(search_name, actual->name);
         if (d < min_dist) {
             min_dist = d;
