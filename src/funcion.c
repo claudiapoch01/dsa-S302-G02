@@ -83,7 +83,8 @@ void quitar_acentos(char *cadena) {
 }
 
 void normalizar_nombre(char *dest, const char *src) {
-    // 1. CALLES (Carrer)
+    // se usa la funcion strncasecmp que es como strncmp pero ignora mayúsculas y minúsculas
+    // comprueba las abreviaturas de calle (C., C/, etc) y las normaliza a 'Carrer'
     if (strncasecmp(src, "C. de ", 6) == 0 || strncasecmp(src, "C/ de ", 6) == 0) {
         strcpy(dest, "Carrer ");
         strcat(dest, src + 6);
@@ -97,8 +98,7 @@ void normalizar_nombre(char *dest, const char *src) {
         strcpy(dest, "Carrer ");
         strcat(dest, src + 7);
     } 
-    
-    // 2. AVENIDAS (Avinguda)
+    // comprobaciones de abreviaturas de avenida (Av., Avda., etc) y las normaliza a 'Avinguda'
     else if (strncasecmp(src, "Avda. de ", 9) == 0) {
         strcpy(dest, "Avinguda ");
         strcat(dest, src + 9);
@@ -118,15 +118,14 @@ void normalizar_nombre(char *dest, const char *src) {
         strcpy(dest, "Avinguda ");
         strcat(dest, src + 9);
     }
-
-    // 3. PLAZAS (Placa) - Usamos "Placa" sin cedilla para normalizar
+// comprobaciones de abreviaturas de plaza (Pca., Pl., etc) y las normaliza a 'Placa'
     else if (strncasecmp(src, "Pca. de ", 8) == 0) {
         strcpy(dest, "Placa ");
         strcat(dest, src + 8);
     } else if (strncasecmp(src, "Pl. de ", 7) == 0) {
         strcpy(dest, "Placa ");
         strcat(dest, src + 7);
-    } else if (strncasecmp(src, "Plaça de ", 10) == 0) { // Cuidado: Plaça de (9 caracteres + el espacio)
+    } else if (strncasecmp(src, "Plaça de ", 10) == 0) {
         strcpy(dest, "Placa ");
         strcat(dest, src + 10); 
     } else if (strncasecmp(src, "Placa de ", 9) == 0) {
@@ -143,13 +142,12 @@ void normalizar_nombre(char *dest, const char *src) {
         strcat(dest, src + 6);
     }
 
-    // 4. SI NO COINCIDE CON NADA
+    // si no coincide con ninguna de las abreviaturas, se copia el nombre tal cual
     else {
         strcpy(dest, src);
     }
 
-    // Finalmente, eliminamos acentos para asegurar el match (À -> A, ç -> c, etc.)
-    quitar_acentos(dest);
+    quitar_acentos(dest); // eliminamos acentos
 }
 
 void leer_cadena_segura(char *buffer, int size) {
