@@ -310,7 +310,7 @@ void buscar_lugar(Place *lista) {
     char search_name_normalizado[150];
     
     printf("Enter place name: ");
-    leer_cadena_segura(search_name, 100);
+    leer_cadena_segura(search_name, 150);
 
     strcpy(search_name_normalizado, search_name);
     quitar_acentos(search_name_normalizado); // eliminamos acentos del lugar escrito por el usuario
@@ -345,6 +345,7 @@ void buscar_lugar(Place *lista) {
     // comprobamos si hay varios lugares que se llaman igual
     if (num_coincidencias == 1) { // si solo hay uno, lo muestra
         printf("\n    Found at (%lf, %lf)\n", coincidencias[0]->latitud, coincidencias[0]->longitud);
+        return;
     } else if (num_coincidencias > 1) { // si hay varios, deja elegir
 
         printf("\nMultiple places found with that name:\n");
