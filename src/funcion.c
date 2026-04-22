@@ -94,8 +94,7 @@ void buscar_direccion(House *lista) {
 
     printf("Enter street name: ");
     getchar(); //limpiar buffer de entrada
-    fgets(raw_name, 100, stdin);
-    raw_name[strcspn(raw_name, "\n")] = 0;
+    leer_cadena_segura(raw_name, 100); // leemos el nombre de la calle
     normalizar_nombre(street_search, raw_name);
 
     printf("Enter street number: ");
@@ -183,9 +182,8 @@ void buscar_lugar(Place *lista) {
     char search_name[150];
     
     printf("Enter place name: ");
-    fgets(search_name, 150, stdin);
-    search_name[strcspn(search_name, "\n")] = 0;
-
+    leer_cadena_segura(search_name, 100);
+    
     Place *actual = lista;
     Place *mejor_sug = NULL;
     int min_dist = 100;

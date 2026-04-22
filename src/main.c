@@ -8,48 +8,48 @@ int main() {
     int num_places = 0;
     int opcion;
 
-    // 1. Pedir el nombre del mapa
+    // Pide el nombre del mapa
     printf("Enter map name (e.g. 'xs_2' or 'xl_1'): ");
     if (scanf("%s", map_name) != 1) return 1;
 
-    // 2. Construir rutas de archivos
+    // Se crean las rutas de los archivos de casas y lugares
     sprintf(path_houses, "maps/%s/houses.txt", map_name);
     sprintf(path_places, "maps/%s/places.txt", map_name);
 
-    // 3. Cargar datos en las listas enlazadas
+    // Carga los datos en las listas enlazadas
     House *lista_casas = cargar_mapa(path_houses, &num_houses);
     Place *lista_lugares = cargar_lugares(path_places, &num_places);
 
-    // 4. Verificar si se ha cargado algo
-    if (lista_casas == NULL && lista_lugares == NULL) {
+    // Comprueba si se ha cargado al menos una de las dos listas, sino muestra un mensaje de error
+    if(lista_casas == NULL && lista_lugares == NULL) {
         printf("Error: Could not load map data for %s\n", map_name);
-        printf("Asegurate de que la carpeta 'maps' este en la raiz del proyecto.\n");
         return 1;
     }
 
-    // 5. Mostrar resumen de carga
+    // muestra el número de casas y lugares cargados
     printf("%d houses loaded\n", num_houses);
-    printf("%d places loaded\n\n", num_places);
+    printf("%d places loaded\n", num_places);
 
-    // 6. Menú principal
+    // Muestra el menú de opciones (dirección, lugar o coordenada)
     printf("--- ORIGIN ---\n");
     printf("Where are you? Address (1), Place (2) or Coordinate (3)? ");
     scanf("%d", &opcion);
 
+    // redirije a la función adecuada según la opción que haya entrado el usuario
     switch (opcion) {
-        case 1:
+        case 1: // Caso 1: dirección
             buscar_direccion(lista_casas);
             break;
-        case 2:
+        case 2: // Caso 2: lugar
             getchar();
             buscar_lugar(lista_lugares);
             break;
-        case 3:
+        case 3: // Caso 3: coordenada (aun no implementado)
             printf("Not implemented yet.\n");
             break;
     }
 
-    // 7. Liberar memoria antes de salir
+    // Se libera la memoria antes de salir
     if (lista_casas) liberar_lista(lista_casas);
     if (lista_lugares) liberar_lugares(lista_lugares);
 
