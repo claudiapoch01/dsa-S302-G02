@@ -10,7 +10,7 @@ int main() {
 
     // Pide el nombre del mapa
     printf("Enter map name (e.g. 'xs_2' or 'xl_1'): ");
-    if (scanf("%s", map_name) != 1) return 1;
+    leer_cadena_segura(map_name, 20);
 
     // Se crean las rutas de los archivos de casas y lugares
     sprintf(path_houses, "maps/%s/houses.txt", map_name);
