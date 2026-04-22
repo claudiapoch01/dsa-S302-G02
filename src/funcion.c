@@ -84,30 +84,26 @@ void quitar_acentos(char *cadena) {
 
 // normaliza el nombre (cambia 'c.', 'c/', 'carrer de', etc. por 'carrer')
 void normalizar_nombre(char *dest, const char *src) {
-    // 1. Manejo de Carrer (C., C/, Carrer de)
+    // se usa la funcion strncasecmp que es como strncmp pero ignora mayúsculas y minúsculas
+    // comprueba las abreviaturas de calle (C., C/, etc) y las normaliza a 'Carrer'
     if (strncasecmp(src, "C. de ", 6) == 0 || strncasecmp(src, "C/ de ", 6) == 0) {
         strcpy(dest, "Carrer ");
         strcat(dest, src + 6);
-    } 
-    else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
+    } else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
         strcpy(dest, "Carrer ");
         strcat(dest, src + 3);
-    } 
-    else if (strncasecmp(src, "Carrer de ", 10) == 0) {
+    } else if (strncasecmp(src, "Carrer de ", 10) == 0) {
         strcpy(dest, "Carrer ");
         strcat(dest, src + 10);
     }
-    // 2. Manejo de Avinguda (Av., Avda.) - ESTO TE DA EL PUNTO EXTRA DE ABREVIATURAS
-    else if (strncasecmp(src, "Av. ", 4) == 0) {
+    // comprobaciones de abreviaturas de avenida (Av., Avda., etc) y las normaliza a 'Avinguda'
+    else if (strncasecmp(src, "Av. ", 4) == 0 || strncasecmp(src, "Av/ ", 4) == 0) {
         strcpy(dest, "Avinguda ");
         strcat(dest, src + 4);
-    }
-    else if (strncasecmp(src, "Avda. ", 6) == 0) {
+    } else if (strncasecmp(src, "Avda. ", 6) == 0 || strncasecmp(src, "Avda/ ", 6) == 0) {
         strcpy(dest, "Avinguda ");
         strcat(dest, src + 6);
-    }
-    // 3. Si no hay abreviatura conocida, copiamos tal cual
-    else {
+    } else { // si no coincide con ninguna, se copia tal cual
         strcpy(dest, src);
     }
 
