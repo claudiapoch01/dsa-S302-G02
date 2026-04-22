@@ -82,62 +82,73 @@ void quitar_acentos(char *cadena) {
     cadena[j] = '\0';  // usamos un caracter vacio para acabar la palabra
 }
 
-// normaliza el nombre (cambia 'c.', 'c/', 'carrer de', etc. por 'carrer')
 void normalizar_nombre(char *dest, const char *src) {
-    // se usa la funcion strncasecmp que es como strncmp pero ignora mayúsculas y minúsculas
-    // comprueba las abreviaturas de calle (C., C/, etc) y las normaliza a 'Carrer'
+    // 1. CALLES (Carrer)
     if (strncasecmp(src, "C. de ", 6) == 0 || strncasecmp(src, "C/ de ", 6) == 0) {
         strcpy(dest, "Carrer ");
         strcat(dest, src + 6);
-    } else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0 || strncasecmp(src, "C ", 2) == 0) {
-        strcpy(dest, "Carrer ");
-        if (src[1] == '.' || src[1] == '/') strcat(dest, src + 3);
-        else strcat(dest, src + 2);
-    } 
-    else if (strncasecmp(src, "Carrer de ", 10) == 0) {
+    } else if (strncasecmp(src, "Carrer de ", 10) == 0) {
         strcpy(dest, "Carrer ");
         strcat(dest, src + 10);
-    }
-
-    // 2. Manejo de AVINGUDA (Av., Avda., Avinguda de)
-    else if (strncasecmp(src, "Av. de ", 7) == 0 || strncasecmp(src, "Avda. de ", 9) == 0) {
+    } else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
+        strcpy(dest, "Carrer ");
+        strcat(dest, src + 3);
+    } else if (strncasecmp(src, "Carrer ", 7) == 0) {
+        strcpy(dest, "Carrer ");
+        strcat(dest, src + 7);
+    } 
+    
+    // 2. AVENIDAS (Avinguda)
+    else if (strncasecmp(src, "Avda. de ", 9) == 0) {
         strcpy(dest, "Avinguda ");
-        if (strncasecmp(src, "Av. ", 4) == 0) strcat(dest, src + 7);
-        else strcat(dest, src + 9);
-    }
-    else if (strncasecmp(src, "Av. ", 4) == 0 || strncasecmp(src, "Avda. ", 6) == 0) {
+        strcat(dest, src + 9);
+    } else if (strncasecmp(src, "Av. de ", 7) == 0) {
         strcpy(dest, "Avinguda ");
-        if (strncasecmp(src, "Av. ", 4) == 0) strcat(dest, src + 4);
-        else strcat(dest, src + 6);
-    }
-    else if (strncasecmp(src, "Avinguda de ", 12) == 0) {
+        strcat(dest, src + 7);
+    } else if (strncasecmp(src, "Avinguda de ", 12) == 0) {
         strcpy(dest, "Avinguda ");
         strcat(dest, src + 12);
+    } else if (strncasecmp(src, "Avda. ", 6) == 0) {
+        strcpy(dest, "Avinguda ");
+        strcat(dest, src + 6);
+    } else if (strncasecmp(src, "Av. ", 4) == 0) {
+        strcpy(dest, "Avinguda ");
+        strcat(dest, src + 4);
+    } else if (strncasecmp(src, "Avinguda ", 9) == 0) {
+        strcpy(dest, "Avinguda ");
+        strcat(dest, src + 9);
     }
 
-    // 3. Manejo de PLAZA / PLAÇA (Pl., Pça., Placa de)
-    else if (strncasecmp(src, "Pl. de ", 7) == 0 || strncasecmp(src, "Pca. de ", 8) == 0) {
+    // 3. PLAZAS (Placa) - Usamos "Placa" sin cedilla para normalizar
+    else if (strncasecmp(src, "Pca. de ", 8) == 0) {
         strcpy(dest, "Placa ");
-        if (strncasecmp(src, "Pl. ", 4) == 0) strcat(dest, src + 7);
-        else strcat(dest, src + 8);
-    }
-    else if (strncasecmp(src, "Pl. ", 4) == 0 || strncasecmp(src, "Pca. ", 5) == 0) {
+        strcat(dest, src + 8);
+    } else if (strncasecmp(src, "Pl. de ", 7) == 0) {
         strcpy(dest, "Placa ");
-        if (strncasecmp(src, "Pl. ", 4) == 0) strcat(dest, src + 4);
-        else strcat(dest, src + 5);
-    }
-    else if (strncasecmp(src, "Placa de ", 9) == 0 || strncasecmp(src, "Placa ", 6) == 0) {
+        strcat(dest, src + 7);
+    } else if (strncasecmp(src, "Plaça de ", 10) == 0) { // Cuidado: Plaça de (9 caracteres + el espacio)
         strcpy(dest, "Placa ");
-        if (strcasecmp(src, "Placa de ") == 0) strcat(dest, src + 9);
-        else strcat(dest, src + 6);
+        strcat(dest, src + 10); 
+    } else if (strncasecmp(src, "Placa de ", 9) == 0) {
+        strcpy(dest, "Placa ");
+        strcat(dest, src + 9);
+    } else if (strncasecmp(src, "Pl. ", 4) == 0 || strncasecmp(src, "Pca. ", 5) == 0) {
+        strcpy(dest, "Placa ");
+        strcat(dest, (src[2] == '.') ? src + 4 : src + 5);
+    } else if (strncasecmp(src, "Plaça ", 7) == 0) {
+        strcpy(dest, "Placa ");
+        strcat(dest, src + 7);
+    } else if (strncasecmp(src, "Placa ", 6) == 0) {
+        strcpy(dest, "Placa ");
+        strcat(dest, src + 6);
     }
 
-    // 4. Si no es nada de lo anterior, copiamos tal cual
+    // 4. SI NO COINCIDE CON NADA
     else {
         strcpy(dest, src);
     }
 
-    // Finalmente, eliminamos acentos para asegurar el match
+    // Finalmente, eliminamos acentos para asegurar el match (À -> A, ç -> c, etc.)
     quitar_acentos(dest);
 }
 
