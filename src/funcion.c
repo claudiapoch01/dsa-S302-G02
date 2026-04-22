@@ -84,31 +84,61 @@ void quitar_acentos(char *cadena) {
 
 // normaliza el nombre (cambia 'c.', 'c/', 'carrer de', etc. por 'carrer')
 void normalizar_nombre(char *dest, const char *src) {
-    // se usa la funcion strncasecmp que es como strncmp pero ignora mayúsculas y minúsculas
-    // comprueba las abreviaturas de calle (C., C/, etc) y las normaliza a 'Carrer'
+    // 1. Manejo de CARRER (C., C/, C , Carrer de)
     if (strncasecmp(src, "C. de ", 6) == 0 || strncasecmp(src, "C/ de ", 6) == 0) {
         strcpy(dest, "Carrer ");
-        //Se concatena el resto del string a partir de la posición 6, que es donde empieza el nombre de la calle
-        strcat(dest, src + 6); 
-    } else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
+        strcat(dest, src + 6);
+    } 
+    else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0 || strncasecmp(src, "C ", 2) == 0) {
         strcpy(dest, "Carrer ");
-        strcat(dest, src + 3);
-    } else if (strncasecmp(src, "Carrer de ", 10) == 0 || strncasecmp(src, "carrer de ", 10) == 0) {
+        if (src[1] == '.' || src[1] == '/') strcat(dest, src + 3);
+        else strcat(dest, src + 2);
+    } 
+    else if (strncasecmp(src, "Carrer de ", 10) == 0) {
         strcpy(dest, "Carrer ");
         strcat(dest, src + 10);
     }
-    // comprobaciones de abreviaturas de avenida (Av., Avda., etc) y las normaliza a 'Avinguda'
-    else if (strncasecmp(src, "Av. ", 4) == 0 || strncasecmp(src, "Av/ ", 4) == 0) {
+
+    // 2. Manejo de AVINGUDA (Av., Avda., Avinguda de)
+    else if (strncasecmp(src, "Av. de ", 7) == 0 || strncasecmp(src, "Avda. de ", 9) == 0) {
         strcpy(dest, "Avinguda ");
-        strcat(dest, src + 4);
-    } else if (strncasecmp(src, "Avda. ", 6) == 0 || strncasecmp(src, "Avda/ ", 6) == 0) {
+        if (strncasecmp(src, "Av. ", 4) == 0) strcat(dest, src + 7);
+        else strcat(dest, src + 9);
+    }
+    else if (strncasecmp(src, "Av. ", 4) == 0 || strncasecmp(src, "Avda. ", 6) == 0) {
         strcpy(dest, "Avinguda ");
-        strcat(dest, src + 6);
-    } else { // si no coincide con ninguna, se copia tal cual
+        if (strncasecmp(src, "Av. ", 4) == 0) strcat(dest, src + 4);
+        else strcat(dest, src + 6);
+    }
+    else if (strncasecmp(src, "Avinguda de ", 12) == 0) {
+        strcpy(dest, "Avinguda ");
+        strcat(dest, src + 12);
+    }
+
+    // 3. Manejo de PLAZA / PLAÇA (Pl., Pça., Placa de)
+    else if (strncasecmp(src, "Pl. de ", 7) == 0 || strncasecmp(src, "Pca. de ", 8) == 0) {
+        strcpy(dest, "Placa ");
+        if (strncasecmp(src, "Pl. ", 4) == 0) strcat(dest, src + 7);
+        else strcat(dest, src + 8);
+    }
+    else if (strncasecmp(src, "Pl. ", 4) == 0 || strncasecmp(src, "Pca. ", 5) == 0) {
+        strcpy(dest, "Placa ");
+        if (strncasecmp(src, "Pl. ", 4) == 0) strcat(dest, src + 4);
+        else strcat(dest, src + 5);
+    }
+    else if (strncasecmp(src, "Placa de ", 9) == 0 || strncasecmp(src, "Placa ", 6) == 0) {
+        strcpy(dest, "Placa ");
+        if (strcasecmp(src, "Placa de ") == 0) strcat(dest, src + 9);
+        else strcat(dest, src + 6);
+    }
+
+    // 4. Si no es nada de lo anterior, copiamos tal cual
+    else {
         strcpy(dest, src);
     }
 
-    quitar_acentos(dest); // se eliminan los acentos
+    // Finalmente, eliminamos acentos para asegurar el match
+    quitar_acentos(dest);
 }
 
 void leer_cadena_segura(char *buffer, int size) {
