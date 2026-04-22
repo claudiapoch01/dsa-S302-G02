@@ -9,7 +9,8 @@ int main() {
     int opcion;
     House *lista_casas = NULL;
     Place *lista_lugares = NULL;
-    while (1) {
+
+    while (1) { // va a estar en el bucle hasta que se haga un break al cargar un mapa correctamente
         // pide el nombre del mapa al usuario
         printf("Enter map name (xs_1, xs_2, md_1, lg_1, xl_1 or 2xl_1): ");
         leer_cadena_segura(map_name, sizeof(map_name));
@@ -48,13 +49,23 @@ int main() {
 
     // Muestra el menú de opciones (dirección, lugar o coordenada)
     printf("--- ORIGIN ---\n");
-    printf("Where are you? Address (1), Place (2) or Coordinate (3)? ");
-    while (scanf("%d", &opcion) != 1) {
-        printf("Invalid input. Please enter a number: ");
-        int c; while ((c = getchar()) != '\n'); // Limpia la memoria
+    while (1) { // bucle que no finaliza hasta el break cuando el usuario introduce una opción válida
+        printf("Where are you? Address (1), Place (2) or Coordinate (3)? ");
+
+        if (scanf("%d", &opcion) != 1) { // controla el error de si el usuario no introduce un valor numérico
+            printf("Invalid input. Please enter a number.\n");
+        } else if (opcion < 1 || opcion > 3) { // comprueba que el número introducido es 1, 2 o 3
+            printf("Invalid option. Please choose 1, 2 or 3.\n");
+        } else { // si es correcto, sale del bucle
+            int c;
+            while ((c = getchar()) != '\n') { } // limpia resto de línea
+            break;
+        }
+
+        // si no ha salido aun del bucle, significa que ha introducido un valor incorrecto
+        int c;
+        while ((c = getchar()) != '\n') { } // se limpia la memoria y se repite el bucle
     }
-    int c; while ((c = getchar()) != '\n'); // limpiamos la memoria
-    
     switch (opcion) {
         case 1:  // caso 1: dirección
             buscar_direccion(lista_casas);
