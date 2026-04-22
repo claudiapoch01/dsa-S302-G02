@@ -82,6 +82,7 @@ void quitar_acentos(char *cadena) {
     cadena[j] = '\0';  // usamos un caracter vacio para acabar la palabra
 }
 
+// funcion para normalizar las direcciones
 void normalizar_nombre(char *dest, const char *src) {
     // se usa la funcion strncasecmp que es como strncmp pero ignora mayúsculas y minúsculas
     // comprueba las abreviaturas de calle (C., C/, etc) y las normaliza a 'Carrer'
