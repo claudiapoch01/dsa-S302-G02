@@ -84,24 +84,35 @@ void quitar_acentos(char *cadena) {
 
 // normaliza el nombre (cambia 'c.', 'c/', 'carrer de', etc. por 'carrer')
 void normalizar_nombre(char *dest, const char *src) {
-    // comprueba si coincide con algun formato o abreviatura (ignorando mayúsculas) y lo substituye, sino lo deja igual
-    // se usa la funcion strncasecmp que es como strncmp pero ignora mayúsculas y minúsculas
+    // 1. Manejo de Carrer (C., C/, Carrer de)
     if (strncasecmp(src, "C. de ", 6) == 0 || strncasecmp(src, "C/ de ", 6) == 0) {
         strcpy(dest, "Carrer ");
-        //Se concatena el resto del string a partir de la posición 6, que es donde empieza el nombre de la calle
         strcat(dest, src + 6);
-    } else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
+    } 
+    else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
         strcpy(dest, "Carrer ");
-        //Se concatena el resto del string a partir de la posición 3, que es donde empieza el nombre de la calle
         strcat(dest, src + 3);
-    } else if (strncasecmp(src, "Carrer de ", 10) == 0) {
+    } 
+    else if (strncasecmp(src, "Carrer de ", 10) == 0) {
         strcpy(dest, "Carrer ");
-        //Se concatena el resto del string a partir de la posición 10, que es donde empieza el nombre de la calle
         strcat(dest, src + 10);
-    } else {
+    }
+    // 2. Manejo de Avinguda (Av., Avda.) - ESTO TE DA EL PUNTO EXTRA DE ABREVIATURAS
+    else if (strncasecmp(src, "Av. ", 4) == 0) {
+        strcpy(dest, "Avinguda ");
+        strcat(dest, src + 4);
+    }
+    else if (strncasecmp(src, "Avda. ", 6) == 0) {
+        strcpy(dest, "Avinguda ");
+        strcat(dest, src + 6);
+    }
+    // 3. Si no hay abreviatura conocida, copiamos tal cual
+    else {
         strcpy(dest, src);
     }
-    quitar_acentos(dest); // se eliminan los acentos
+
+    // Finalmente, limpiamos acentos para que la búsqueda sea infalible
+    quitar_acentos(dest);
 }
 
 void leer_cadena_segura(char *buffer, int size) {
