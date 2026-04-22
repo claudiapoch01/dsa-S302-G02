@@ -189,7 +189,6 @@ void buscar_direccion(House *lista) {
     int num_search;
 
     printf("Enter street name: ");
-    getchar(); //limpiar buffer de entrada
     leer_cadena_segura(raw_name, 100); // leemos el nombre de la calle
     normalizar_nombre(street_search, raw_name);
 

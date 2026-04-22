@@ -36,4 +36,6 @@ void buscar_lugar(Place *lista);
 void liberar_lugares(Place *lista);
 void liberar_lista(House *lista);
 
+void leer_cadena_segura(char *buffer, int size);
+
 #endif

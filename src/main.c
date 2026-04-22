@@ -10,7 +10,7 @@ int main() {
 
     // Pide el nombre del mapa
     printf("Enter map name (e.g. 'xs_2' or 'xl_1'): ");
-    if (scanf("%s", map_name) != 1) return 1;
+    leer_cadena_segura(map_name, 20);
 
     // Se crean las rutas de los archivos de casas y lugares
     sprintf(path_houses, "maps/%s/houses.txt", map_name);
@@ -35,7 +35,7 @@ int main() {
     printf("Where are you? Address (1), Place (2) or Coordinate (3)? ");
     scanf("%d", &opcion);
     
-    // Limpiamos el buffer UNA VEZ para todos los casos
+    // Limpiamos la memoria
     getchar(); 
 
     switch (opcion) {
@@ -49,7 +49,7 @@ int main() {
             printf("Not implemented yet.\n");
             break;
         default:
-            printf("Invalid option.\n"); // Esto te da puntos por "handling invalid answers"
+            printf("Invalid option.\n"); // Si no coincide con ninguna de las opciones, muestra un mensaje de error
             break;
     }
 
