@@ -38,6 +38,7 @@ House* add_casa(House *cabeza, char *street, int num, double lat, double lon) {
     House *nueva = (House*)malloc(sizeof(House));
     if (nueva == NULL) return cabeza;
 
+    // utilizamos snprintf para evitar overflow, aunque el nombre ya esté normalizado
     snprintf(nueva->street_name, sizeof(nueva->street_name), "%s", street);
 
     nueva->house_number = num;
@@ -51,6 +52,7 @@ Place* add_lugar(Place *cabeza, char *name, double lat, double lon) {
     Place *nuevo = (Place*)malloc(sizeof(Place));
     if (nuevo == NULL) return cabeza;
 
+    // utilizamos snprintf para evitar overflow, aunque el nombre ya esté normalizado
     snprintf(nuevo->name, sizeof(nuevo->name), "%s", name);
 
     nuevo->latitud = lat;
