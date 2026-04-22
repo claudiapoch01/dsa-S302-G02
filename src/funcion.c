@@ -54,18 +54,55 @@ Place* add_lugar(Place *cabeza, char *name, double lat, double lon) {
 // normaliza el nombre (cambia 'c.', 'c/', 'carrer de', etc. por 'carrer')
 void normalizar_nombre(char *dest, const char *src) {
     // comprueba si coincide con algun formato o abreviatura (ignorando mayúsculas) y lo substituye, sino lo deja igual
+    // se usa la funcion strncasecmp que es como strncmp pero ignora mayúsculas y minúsculas
     if (strncasecmp(src, "C. de ", 6) == 0 || strncasecmp(src, "C/ de ", 6) == 0) {
         strcpy(dest, "Carrer ");
+        //Se concatena el resto del string a partir de la posición 6, que es donde empieza el nombre de la calle
         strcat(dest, src + 6);
     } else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
         strcpy(dest, "Carrer ");
+        //Se concatena el resto del string a partir de la posición 3, que es donde empieza el nombre de la calle
         strcat(dest, src + 3);
     } else if (strncasecmp(src, "Carrer de ", 10) == 0) {
         strcpy(dest, "Carrer ");
+        //Se concatena el resto del string a partir de la posición 10, que es donde empieza el nombre de la calle
         strcat(dest, src + 10);
     } else {
         strcpy(dest, src);
     }
+
+    quitar_acentos(dest); // se eliminan los acentos
+}
+
+// Elimina los acentos 
+void quitar_acentos(char *cadena) {
+    // creamos arrays con las letras con acento y sin acento (para substituirlo luego)
+    const char *con_acento[] = {"á","à","Á","À","é","è","É","È","í","ì","Í","Ì","ó","ò","Ó","Ò","ú","ù","Ú","Ù","ñ","Ñ","ç","Ç"};
+    const char *sin_acento[] = {"a","a","A","A","e","e","E","E","i","i","I","I","o","o","O","O","u","u","U","U","n","N","c","C"};
+    int num_letras = 24; // tamaño del array
+
+    int i = 0; // posición para leer el string original
+    int j = 0; // posición para escribir en el string final
+
+    while (cadena[i] != '\0') {
+        int encontrado = 0;
+        for (int k = 0; k < num_letras; k++) {
+            //para poder comparar, hay que comparar dos espacios porque las letras con acento ocupan el doble que las de sin acento
+            if (cadena[i] == con_acento[k][0] && cadena[i+1] == con_acento[k][1]) { // si hay una letra con acento, se cambia
+                cadena[j] = sin_acento[k][0]; // se guarda la letra sin acento en el string final
+                i = i + 2; // se saltan dos posiciones en el string inicial, porque la letra acentuada ocupa el doble
+                j = j + 1; // movemos solo una posicion del string final, porque la letra sin acento ocupa solo una posición
+                encontrado = 1;
+                break; // como ya hemos encontrado la coincidencia, acabamos el bucle
+            }
+        }
+        if (encontrado == 0) {
+            cadena[j] = cadena[i]; /// Si no hemos encontrado ningún acento, copiamos la letra tal cual
+            i++;
+            j++;
+        }
+    }
+    cadena[j] = '\0';  // usamos un caracter vacio para acabar la palabra
 }
 
 void leer_cadena_segura(char *buffer, int size) {

@@ -36,4 +36,5 @@ void buscar_lugar(Place *lista);
 void liberar_lugares(Place *lista);
 void liberar_lista(House *lista);
 
+void quitar_acentos(char *dest);
 #endif
