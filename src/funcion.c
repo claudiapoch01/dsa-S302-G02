@@ -157,6 +157,11 @@ void buscar_direccion(House *lista) {
     normalizar_nombre(street_search, raw_name);
 
     printf("Enter street number: ");
+    while (scanf("%d", &num_search) != 1) { // si el usuario no introduce un número, vuelve a preguntarlo
+        printf("Invalid input. Please enter a numeric value: ");
+        int c; while ((c = getchar()) != '\n'); // borra el valor anterior
+    }
+    
     scanf("%d", &num_search);
 
     House *actual = lista;
