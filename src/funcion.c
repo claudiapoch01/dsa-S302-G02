@@ -51,7 +51,6 @@ Place* add_lugar(Place *cabeza, char *name, double lat, double lon) {
     return nuevo;
 }
 
-
 // Elimina los acentos 
 void quitar_acentos(char *cadena) {
     // creamos arrays con las letras con acento y sin acento (para substituirlo luego)
