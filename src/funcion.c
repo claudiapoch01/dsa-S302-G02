@@ -118,7 +118,7 @@ void normalizar_nombre(char *dest, const char *src) {
         strcpy(dest, "Avinguda ");
         strcat(dest, src + 9);
     }
-// comprobaciones de abreviaturas de plaza (Pca., Pl., etc) y las normaliza a 'Placa'
+    // comprobaciones de abreviaturas de plaza (Pca., Pl., etc) y las normaliza a 'Placa'
     else if (strncasecmp(src, "Pca. de ", 8) == 0) {
         strcpy(dest, "Placa ");
         strcat(dest, src + 8);
@@ -141,7 +141,14 @@ void normalizar_nombre(char *dest, const char *src) {
         strcpy(dest, "Placa ");
         strcat(dest, src + 6);
     }
-
+    // comprobaciones de abreviaturas de rambla (Rbla., Rbla de., etc) y las normaliza a 'Rambla'
+    else if (strncasecmp(src, "Rbla. de ", 9) == 0 || strncasecmp(src, "Rbla de ", 8) == 0) {
+        strcpy(dest, "Rambla ");
+        strcat(dest, (src[4] == '.') ? src + 9 : src + 8);
+    } else if (strncasecmp(src, "Rambla de ", 10) == 0) {
+        strcpy(dest, "Rambla ");
+        strcat(dest, src + 10);
+    }
     // si no coincide con ninguna de las abreviaturas, se copia el nombre tal cual
     else {
         strcpy(dest, src);
