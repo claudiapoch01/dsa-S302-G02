@@ -36,6 +36,4 @@ void buscar_lugar(Place *lista);
 void liberar_lugares(Place *lista);
 void liberar_lista(House *lista);
 
-void normalizar_nombre(char *dest, const char *src);
-void quitar_acentos(char *dest);
 #endif

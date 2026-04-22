@@ -51,27 +51,6 @@ Place* add_lugar(Place *cabeza, char *name, double lat, double lon) {
     return nuevo;
 }
 
-// normaliza el nombre (cambia 'c.', 'c/', 'carrer de', etc. por 'carrer')
-void normalizar_nombre(char *dest, const char *src) {
-    // comprueba si coincide con algun formato o abreviatura (ignorando mayúsculas) y lo substituye, sino lo deja igual
-    // se usa la funcion strncasecmp que es como strncmp pero ignora mayúsculas y minúsculas
-    if (strncasecmp(src, "C. de ", 6) == 0 || strncasecmp(src, "C/ de ", 6) == 0) {
-        strcpy(dest, "Carrer ");
-        //Se concatena el resto del string a partir de la posición 6, que es donde empieza el nombre de la calle
-        strcat(dest, src + 6);
-    } else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
-        strcpy(dest, "Carrer ");
-        //Se concatena el resto del string a partir de la posición 3, que es donde empieza el nombre de la calle
-        strcat(dest, src + 3);
-    } else if (strncasecmp(src, "Carrer de ", 10) == 0) {
-        strcpy(dest, "Carrer ");
-        //Se concatena el resto del string a partir de la posición 10, que es donde empieza el nombre de la calle
-        strcat(dest, src + 10);
-    } else {
-        strcpy(dest, src);
-    }
-    quitar_acentos(dest); // se eliminan los acentos
-}
 
 // Elimina los acentos 
 void quitar_acentos(char *cadena) {
@@ -102,6 +81,28 @@ void quitar_acentos(char *cadena) {
         }
     }
     cadena[j] = '\0';  // usamos un caracter vacio para acabar la palabra
+}
+
+// normaliza el nombre (cambia 'c.', 'c/', 'carrer de', etc. por 'carrer')
+void normalizar_nombre(char *dest, const char *src) {
+    // comprueba si coincide con algun formato o abreviatura (ignorando mayúsculas) y lo substituye, sino lo deja igual
+    // se usa la funcion strncasecmp que es como strncmp pero ignora mayúsculas y minúsculas
+    if (strncasecmp(src, "C. de ", 6) == 0 || strncasecmp(src, "C/ de ", 6) == 0) {
+        strcpy(dest, "Carrer ");
+        //Se concatena el resto del string a partir de la posición 6, que es donde empieza el nombre de la calle
+        strcat(dest, src + 6);
+    } else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
+        strcpy(dest, "Carrer ");
+        //Se concatena el resto del string a partir de la posición 3, que es donde empieza el nombre de la calle
+        strcat(dest, src + 3);
+    } else if (strncasecmp(src, "Carrer de ", 10) == 0) {
+        strcpy(dest, "Carrer ");
+        //Se concatena el resto del string a partir de la posición 10, que es donde empieza el nombre de la calle
+        strcat(dest, src + 10);
+    } else {
+        strcpy(dest, src);
+    }
+    quitar_acentos(dest); // se eliminan los acentos
 }
 
 void leer_cadena_segura(char *buffer, int size) {
