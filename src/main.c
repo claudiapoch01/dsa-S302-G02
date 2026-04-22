@@ -41,7 +41,7 @@ int main() {
             buscar_direccion(lista_casas);
             break;
         case 2:
-            getchar(); // Limpia el enter del scanf anterior para que el fgets no se salte
+            getchar();
             buscar_lugar(lista_lugares);
             break;
         case 3:
