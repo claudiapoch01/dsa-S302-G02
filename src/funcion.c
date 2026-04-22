@@ -162,6 +162,7 @@ void normalizar_nombre(char *dest, size_t dest_size, const char *src) {
         prefix_out = "Rambla "; rest = src + 10;
     }
 
+    // si coincide con alguna abreviatura, se normaliza y se copia el resto del nombre tal cual
     if (prefix_out) snprintf(dest, dest_size, "%s%s", prefix_out, rest);
     else snprintf(dest, dest_size, "%s", src);  // si no coincide con ninguna de las abreviaturas, se copia el nombre tal cual
 
