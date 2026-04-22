@@ -38,6 +38,20 @@ void normalizar_nombre(char *dest, const char *src) {
     } else {
         strcpy(dest, src);
     }
+
+}
+
+void leer_cadena_segura(char *buffer, int size) {
+    if (fgets(buffer, size, stdin) != NULL) {
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len - 1] == '\n') {
+            buffer[len - 1] = '\0'; // Quita el salto de línea
+        } else {
+            // El usuario metió demasiados caracteres, limpiamos la basura restante
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+        }
+    }
 }
 
 // --- GESTIÓN DE CASAS (ADDRESS) ---
@@ -45,7 +59,7 @@ void normalizar_nombre(char *dest, const char *src) {
 House* cargar_mapa(char *path, int *total) {
     FILE *f = fopen(path, "r");
     if (f == NULL) {
-        printf("DEBUG: No se pudo abrir el archivo en la ruta: %s\n", path);
+        printf("No se pudo abrir el archivo en la ruta: %s\n", path);
         return NULL;
     }
 
