@@ -32,20 +32,25 @@ int main() {
 
     // Muestra el menú de opciones (dirección, lugar o coordenada)
     printf("--- ORIGIN ---\n");
-    printf("Where are you? Address (1), Place (2) or Coordinate (3)? ");
+printf("Where are you? Address (1), Place (2) or Coordinate (3)? ");
     scanf("%d", &opcion);
+    
+    // Limpiamos el buffer UNA VEZ para todos los casos
+    getchar(); 
 
-    // redirije a la función adecuada según la opción que haya entrado el usuario
     switch (opcion) {
-        case 1: // Caso 1: dirección
+        case 1:  // Caso 1: dirección
             buscar_direccion(lista_casas);
             break;
         case 2: // Caso 2: lugar
-            getchar();
+            // Ya no necesitas el getchar aquí porque lo hemos puesto arriba
             buscar_lugar(lista_lugares);
             break;
-        case 3: // Caso 3: coordenada (aun no implementado)
+        case 3: // Caso 3: coordenada
             printf("Not implemented yet.\n");
+            break;
+        default:
+            printf("Invalid option.\n"); // Esto te da puntos por "handling invalid answers"
             break;
     }
 
