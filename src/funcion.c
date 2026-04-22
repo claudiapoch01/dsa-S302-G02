@@ -30,15 +30,42 @@ int distancia_levenshtein(char *s1, char *s2) {
     return matriz[len1][len2];
 }
 
-// normaliza el nombre (cambia 'c.' y 'c/' por 'carrer')
+House* add_casa(House *cabeza, char *street, int num, double lat, double lon) {
+    House *nueva = (House*)malloc(sizeof(House));
+    if (nueva == NULL) return cabeza;
+    strcpy(nueva->street_name, street);
+    nueva->house_number = num;
+    nueva->latitud = lat;
+    nueva->longitud = lon;
+    nueva->next = cabeza;
+    return nueva;
+}
+
+Place* add_lugar(Place *cabeza, char *name, double lat, double lon) {
+    Place *nuevo = (Place*)malloc(sizeof(Place));
+    if (nuevo == NULL) return cabeza;
+    strcpy(nuevo->name, name);
+    nuevo->latitud = lat;
+    nuevo->longitud = lon;
+    nuevo->next = cabeza;
+    return nuevo;
+}
+
+// normaliza el nombre (cambia 'c.', 'c/', 'carrer de', etc. por 'carrer')
 void normalizar_nombre(char *dest, const char *src) {
-    if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
+    // comprueba si coincide con algun formato o abreviatura (ignorando mayúsculas) y lo substituye, sino lo deja igual
+    if (strncasecmp(src, "C. de ", 6) == 0 || strncasecmp(src, "C/ de ", 6) == 0) {
+        strcpy(dest, "Carrer ");
+        strcat(dest, src + 6);
+    } else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
         strcpy(dest, "Carrer ");
         strcat(dest, src + 3);
+    } else if (strncasecmp(src, "Carrer de ", 10) == 0) {
+        strcpy(dest, "Carrer ");
+        strcat(dest, src + 10);
     } else {
         strcpy(dest, src);
     }
-
 }
 
 void leer_cadena_segura(char *buffer, int size) {
@@ -68,20 +95,16 @@ House* cargar_mapa(char *path, int *total) {
     *total = 0;
 
     while (fgets(linea, sizeof(linea), f)) {
-        House *nueva = (House*)malloc(sizeof(House));
-        if (nueva == NULL) break;
-
-        char nombre_calle[100]; // variable para guardar el nombre de la calle.
-        if (sscanf(linea, "%[^,],%d,%lf,%lf", nombre_calle, &nueva->house_number, &nueva->latitud, &nueva->longitud) == 4) {
-
-            // si en streets.txt está escrito como 'c.' o 'c/', lo substituimos por 'carrer'
-            normalizar_nombre(nueva->street_name, nombre_calle);
-
-            nueva->next = cabeza;
-            cabeza = nueva;
+        char nombre_calle[100]; 
+        int num;
+        double lat, lon;
+        
+        if (sscanf(linea, "%[^,],%d,%lf,%lf", nombre_calle, &num, &lat, &lon) == 4) {
+            char calle_normalizada[100];
+            normalizar_nombre(calle_normalizada, nombre_calle); // normalizamos el nombre
+            
+            cabeza = add_casa(cabeza, calle_normalizada, num, lat, lon); // si es correcto, se añade a la lista
             (*total)++;
-        } else {
-            free(nueva); // si la línea no es correcta (o vacía), se ignora
         }
     }
     fclose(f);    
@@ -163,15 +186,12 @@ Place* cargar_lugares(char *path, int *total) {
     *total = 0;
 
     while (fgets(linea, sizeof(linea), f)) {
-        Place *nuevo = (Place*)malloc(sizeof(Place));
-        if (nuevo == NULL) break;
-    if (sscanf(linea, "%*[^,],%[^,],%*[^,],%lf,%lf", nuevo->name, &nuevo->latitud, &nuevo->longitud) == 3) {
-        nuevo->next = cabeza;
-        cabeza = nuevo;
-        (*total)++;
-    }
-        else {
-            free(nuevo);
+        char nombre_lugar[150];
+        double lat, lon;
+        
+        if (sscanf(linea, "%*[^,],%[^,],%*[^,],%lf,%lf", nombre_lugar, &lat, &lon) == 3) {
+            cabeza = add_lugar(cabeza, nombre_lugar, lat, lon); // si el luegar es correcto, se añade a la lista
+            (*total)++;
         }
     }
     fclose(f);
@@ -183,7 +203,7 @@ void buscar_lugar(Place *lista) {
     
     printf("Enter place name: ");
     leer_cadena_segura(search_name, 100);
-    
+
     Place *actual = lista;
     Place *mejor_sug = NULL;
     int min_dist = 100;

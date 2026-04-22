@@ -15,7 +15,7 @@ typedef struct House {
     struct House *next; 
 } House;
 
-// --- NUEVO: Estructura para lugares ---
+// Estructura para lugares
 typedef struct Place {
     char name[150];
     double latitud;
@@ -23,13 +23,15 @@ typedef struct Place {
     struct Place *next;
 } Place;
 
-// Prototipos existentes
+// Funciones para direcciones
 int distancia_levenshtein(char *s1, char *s2);
 House* cargar_mapa(char *path, int *total);
+House* add_casa(House *cabeza, char *street, int num, double lat, double lon);
 void buscar_direccion(House *lista);
 
-// --- NUEVO: Prototipos para lugares ---
+// Funciones para lugares
 Place* cargar_lugares(char *path, int *total);
+Place* add_lugar(Place *cabeza, char *name, double lat, double lon);
 void buscar_lugar(Place *lista);
 void liberar_lugares(Place *lista);
 void liberar_lista(House *lista);
