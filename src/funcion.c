@@ -161,8 +161,8 @@ void buscar_direccion(House *lista) {
         printf("Invalid input. Please enter a numeric value: ");
         int c; while ((c = getchar()) != '\n'); // borra el valor anterior
     }
-    
-    scanf("%d", &num_search);
+
+    while (getchar() != '\n'); // borramos el valor anterior
 
     House *actual = lista;
     House *mejor_calle_nodo = NULL;
