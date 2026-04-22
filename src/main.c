@@ -29,8 +29,9 @@ int main() {
             continue; // vuelve a pedir
         }
 
-        snprintf(path_houses, sizeof(path_houses), "maps/%s/houses.txt", map_name);
-        snprintf(path_places, sizeof(path_places), "maps/%s/places.txt", map_name);
+        // Se crean las rutas de los archivos de casas y lugares
+        sprintf(path_houses, "maps/%s/houses.txt", map_name);
+        sprintf(path_places, "maps/%s/places.txt", map_name);
 
         num_houses = 0;
         num_places = 0;
