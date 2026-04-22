@@ -49,7 +49,7 @@ int main() {
             printf("Not implemented yet.\n");
             break;
         default:
-            printf("Invalid option.\n"); // Esto te da puntos por "handling invalid answers"
+            printf("Invalid option.\n"); // Si no coincide con ninguna de las opciones, muestra un mensaje de error
             break;
     }
 
