@@ -70,7 +70,6 @@ void normalizar_nombre(char *dest, const char *src) {
     } else {
         strcpy(dest, src);
     }
-
     quitar_acentos(dest); // se eliminan los acentos
 }
 
