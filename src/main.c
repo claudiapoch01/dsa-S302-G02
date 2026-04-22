@@ -40,13 +40,13 @@ int main() {
     int c; while ((c = getchar()) != '\n'); // limpiamos la memoria
     
     switch (opcion) {
-        case 1:  // Caso 1: dirección
+        case 1:  // caso 1: dirección
             buscar_direccion(lista_casas);
             break;
-        case 2: // Caso 2: lugar
+        case 2: // caso 2: lugar
             buscar_lugar(lista_lugares);
             break;
-        case 3: // Caso 3: coordenada
+        case 3: // caso 3: coordenada
             printf("Not implemented yet.\n");
             break;
         default:
