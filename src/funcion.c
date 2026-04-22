@@ -2,7 +2,7 @@
 
 // utilidades
 
-int minimo(int a, int b, int c) {
+int minimo(int a, int b, int c) { // Nos devuelve el entero mas pequeño entre tres
     int m = a;
     if (b < m) m = b;
     if (c < m) m = c;
@@ -13,25 +13,25 @@ int distancia_levenshtein(char *s1, char *s2) {
     int len1 = strlen(s1);
     int len2 = strlen(s2);
 
-    // si las cadenas son demasiado largas, devolvemos un número grande para evitar problemas de memoria
+    // si las cadenas son demasiado largas, devolvemos un número grande para evitar problemas de memoria de desbordamiento
     if (len1 > 200 || len2 > 200) return 9999; 
 
-    int matriz[len1 + 1][len2 + 1];
+    int matriz[len1 + 1][len2 + 1]; // matriz dinamica para calcular las distancias 
 
-    for (int i = 0; i <= len1; i++) matriz[i][0] = i;
+    for (int i = 0; i <= len1; i++) matriz[i][0] = i; // inicializamos 
     for (int j = 0; j <= len2; j++) matriz[0][j] = j;
 
-    for (int i = 1; i <= len1; i++) {
+    for (int i = 1; i <= len1; i++) { // Llenamos la matriz comparando letra por letra 
         for (int j = 1; j <= len2; j++) {
-            int coste = (tolower(s1[i - 1]) == tolower(s2[j - 1])) ? 0 : 1;
+            int coste = (tolower(s1[i - 1]) == tolower(s2[j - 1])) ? 0 : 1; // sin importar las mayusculas 
             matriz[i][j] = minimo(
-                matriz[i - 1][j] + 1,
-                matriz[i][j - 1] + 1,
-                matriz[i - 1][j - 1] + coste
+                matriz[i - 1][j] + 1, // eliminación
+                matriz[i][j - 1] + 1, //insercción 
+                matriz[i - 1][j - 1] + coste // substitución 
             );
         }
     }
-    return matriz[len1][len2];
+    return matriz[len1][len2]; 
 }
 
 House* add_casa(House *cabeza, char *street, int num, double lat, double lon) {
