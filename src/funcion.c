@@ -12,6 +12,10 @@ int minimo(int a, int b, int c) {
 int distancia_levenshtein(char *s1, char *s2) {
     int len1 = strlen(s1);
     int len2 = strlen(s2);
+
+    // si las cadenas son demasiado largas, devolvemos un número grande para evitar problemas de memoria
+    if (len1 > 200 || len2 > 200) return 9999; 
+
     int matriz[len1 + 1][len2 + 1];
 
     for (int i = 0; i <= len1; i++) matriz[i][0] = i;
@@ -33,7 +37,9 @@ int distancia_levenshtein(char *s1, char *s2) {
 House* add_casa(House *cabeza, char *street, int num, double lat, double lon) {
     House *nueva = (House*)malloc(sizeof(House));
     if (nueva == NULL) return cabeza;
-    strcpy(nueva->street_name, street);
+
+    snprintf(nueva->street_name, sizeof(nueva->street_name), "%s", street);
+
     nueva->house_number = num;
     nueva->latitud = lat;
     nueva->longitud = lon;
@@ -44,7 +50,9 @@ House* add_casa(House *cabeza, char *street, int num, double lat, double lon) {
 Place* add_lugar(Place *cabeza, char *name, double lat, double lon) {
     Place *nuevo = (Place*)malloc(sizeof(Place));
     if (nuevo == NULL) return cabeza;
-    strcpy(nuevo->name, name);
+
+    snprintf(nuevo->name, sizeof(nuevo->name), "%s", name);
+
     nuevo->latitud = lat;
     nuevo->longitud = lon;
     nuevo->next = cabeza;
@@ -93,79 +101,69 @@ void quitar_acentos(char *cadena) {
 }
 
 // funcion para normalizar las direcciones
-void normalizar_nombre(char *dest, const char *src) {
+void normalizar_nombre(char *dest, size_t dest_size, const char *src) {
+    if (!dest || dest_size == 0) return;
+    if (!src) { dest[0] = '\0'; return; }
+
+    const char *rest = src;
+    const char *prefix_out = NULL;
+
     // se usa la funcion strncasecmp que es como strncmp pero ignora mayúsculas y minúsculas
     // comprueba las abreviaturas de calle (C., C/, etc) y las normaliza a 'Carrer'
     if (strncasecmp(src, "C. de ", 6) == 0 || strncasecmp(src, "C/ de ", 6) == 0) {
-        strcpy(dest, "Carrer ");
-        strcat(dest, src + 6);
+        prefix_out = "Carrer "; rest = src + 6;
     } else if (strncasecmp(src, "Carrer de ", 10) == 0) {
-        strcpy(dest, "Carrer ");
-        strcat(dest, src + 10);
+        prefix_out = "Carrer "; rest = src + 10;
     } else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
-        strcpy(dest, "Carrer ");
-        strcat(dest, src + 3);
+        prefix_out = "Carrer "; rest = src + 3;
     } else if (strncasecmp(src, "Carrer ", 7) == 0) {
-        strcpy(dest, "Carrer ");
-        strcat(dest, src + 7);
-    } 
+        prefix_out = "Carrer "; rest = src + 7;
+    }
     // comprobaciones de abreviaturas de avenida (Av., Avda., etc) y las normaliza a 'Avinguda'
     else if (strncasecmp(src, "Avda. de ", 9) == 0) {
-        strcpy(dest, "Avinguda ");
-        strcat(dest, src + 9);
+        prefix_out = "Avinguda "; rest = src + 9;
     } else if (strncasecmp(src, "Av. de ", 7) == 0) {
-        strcpy(dest, "Avinguda ");
-        strcat(dest, src + 7);
+        prefix_out = "Avinguda "; rest = src + 7;
     } else if (strncasecmp(src, "Avinguda de ", 12) == 0) {
-        strcpy(dest, "Avinguda ");
-        strcat(dest, src + 12);
+        prefix_out = "Avinguda "; rest = src + 12;
     } else if (strncasecmp(src, "Avda. ", 6) == 0) {
-        strcpy(dest, "Avinguda ");
-        strcat(dest, src + 6);
+        prefix_out = "Avinguda "; rest = src + 6;
     } else if (strncasecmp(src, "Av. ", 4) == 0) {
-        strcpy(dest, "Avinguda ");
-        strcat(dest, src + 4);
+        prefix_out = "Avinguda "; rest = src + 4;
     } else if (strncasecmp(src, "Avinguda ", 9) == 0) {
-        strcpy(dest, "Avinguda ");
-        strcat(dest, src + 9);
+        prefix_out = "Avinguda "; rest = src + 9;
     }
     // comprobaciones de abreviaturas de plaza (Pca., Pl., etc) y las normaliza a 'Placa'
     else if (strncasecmp(src, "Pca. de ", 8) == 0) {
-        strcpy(dest, "Placa ");
-        strcat(dest, src + 8);
+        prefix_out = "Placa "; rest = src + 8;
     } else if (strncasecmp(src, "Pl. de ", 7) == 0) {
-        strcpy(dest, "Placa ");
-        strcat(dest, src + 7);
+        prefix_out = "Placa "; rest = src + 7;
     } else if (strncasecmp(src, "Plaça de ", 10) == 0) {
-        strcpy(dest, "Placa ");
-        strcat(dest, src + 10); 
+        prefix_out = "Placa "; rest = src + 10;
     } else if (strncasecmp(src, "Placa de ", 9) == 0) {
-        strcpy(dest, "Placa ");
-        strcat(dest, src + 9);
-    } else if (strncasecmp(src, "Pl. ", 4) == 0 || strncasecmp(src, "Pca. ", 5) == 0) {
-        strcpy(dest, "Placa ");
-        strcat(dest, (src[2] == '.') ? src + 4 : src + 5);
+        prefix_out = "Placa "; rest = src + 9;
+    } else if (strncasecmp(src, "Pl. ", 4) == 0) {
+        prefix_out = "Placa "; rest = src + 4;
+    } else if (strncasecmp(src, "Pca. ", 5) == 0) {
+        prefix_out = "Placa "; rest = src + 5;
     } else if (strncasecmp(src, "Plaça ", 7) == 0) {
-        strcpy(dest, "Placa ");
-        strcat(dest, src + 7);
+        prefix_out = "Placa "; rest = src + 7;
     } else if (strncasecmp(src, "Placa ", 6) == 0) {
-        strcpy(dest, "Placa ");
-        strcat(dest, src + 6);
+        prefix_out = "Placa "; rest = src + 6;
     }
     // comprobaciones de abreviaturas de rambla (Rbla., Rbla de., etc) y las normaliza a 'Rambla'
-    else if (strncasecmp(src, "Rbla. de ", 9) == 0 || strncasecmp(src, "Rbla de ", 8) == 0) {
-        strcpy(dest, "Rambla ");
-        strcat(dest, (src[4] == '.') ? src + 9 : src + 8);
+    else if (strncasecmp(src, "Rbla. de ", 9) == 0) {
+        prefix_out = "Rambla "; rest = src + 9;
+    } else if (strncasecmp(src, "Rbla de ", 8) == 0) {
+        prefix_out = "Rambla "; rest = src + 8;
     } else if (strncasecmp(src, "Rambla de ", 10) == 0) {
-        strcpy(dest, "Rambla ");
-        strcat(dest, src + 10);
-    }
-    // si no coincide con ninguna de las abreviaturas, se copia el nombre tal cual
-    else {
-        strcpy(dest, src);
+        prefix_out = "Rambla "; rest = src + 10;
     }
 
-    quitar_acentos(dest); // eliminamos acentos
+    if (prefix_out) snprintf(dest, dest_size, "%s%s", prefix_out, rest);
+    else snprintf(dest, dest_size, "%s", src);  // si no coincide con ninguna de las abreviaturas, se copia el nombre tal cual
+
+    quitar_acentos(dest);// eliminamos acentos
 }
 
 void leer_cadena_segura(char *buffer, int size) {
@@ -201,7 +199,7 @@ House* cargar_mapa(char *path, int *total) {
         
         if (sscanf(linea, "%[^,],%d,%lf,%lf", nombre_calle, &num, &lat, &lon) == 4) {
             char calle_normalizada[100];
-            normalizar_nombre(calle_normalizada, nombre_calle); // normalizamos el nombre
+            normalizar_nombre(calle_normalizada, sizeof(calle_normalizada), nombre_calle); // normalizamos el nombre
             
             cabeza = add_casa(cabeza, calle_normalizada, num, lat, lon); // si es correcto, se añade a la lista
             (*total)++;
@@ -217,7 +215,7 @@ void buscar_direccion(House *lista) {
 
     printf("Enter street name: ");
     leer_cadena_segura(raw_name, 100); // leemos el nombre de la calle
-    normalizar_nombre(street_search, raw_name);
+    normalizar_nombre(street_search, sizeof(street_search), raw_name); // normalizamos el nombre de la calle
 
     printf("Enter street number: ");
     while (scanf("%d", &num_search) != 1) { // si el usuario no introduce un número, vuelve a preguntarlo
