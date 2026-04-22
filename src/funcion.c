@@ -51,6 +51,16 @@ Place* add_lugar(Place *cabeza, char *name, double lat, double lon) {
     return nuevo;
 }
 
+// devuelve 1 si el mapa es válido, 0 si no lo es
+int mapa_valido(const char *m) {
+    return strcmp(m, "xs_1") == 0 ||
+           strcmp(m, "xs_2") == 0 ||
+           strcmp(m, "md_1") == 0 ||
+           strcmp(m, "lg_1") == 0 ||
+           strcmp(m, "xl_1") == 0 ||
+           strcmp(m, "2xl_1") == 0;
+}
+
 // Elimina los acentos 
 void quitar_acentos(char *cadena) {
     // creamos arrays con las letras con acento y sin acento (para substituirlo luego)
