@@ -473,6 +473,7 @@ void buscar_coordenada(Street *lista_streets, House *lista_casas, double user_la
 
     // Buscamos el segmento más cercano (lógica que ya tenías)
     while (actual != NULL) {
+        // Dentro de buscar_coordenada:
         double dist = haversine(user_lat, user_lon, actual->mid_lat, actual->mid_lon);
         if (min_dist < 0 || dist < min_dist) {
             min_dist = dist;

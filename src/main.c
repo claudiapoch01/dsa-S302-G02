@@ -86,15 +86,10 @@ int main() {
         case 2: // caso 2: lugar
             buscar_lugar(lista_lugares);
             break;
-        case 3: { // caso 3: coordenada
+        case 3: {
             double u_lat, u_lon;
-            
-            // 1. Usamos la función segura que ya tienes en tu código.
-            // Esta ya valida los números, limpia el buffer y arregla el orden lat/lon.
-            pedir_coordenadas_seguras(&u_lat, &u_lon);
-            
-            // 2. Llamamos a la función de búsqueda pasando AMBAS listas.
-            // Es obligatorio pasar lista_casas para poder obtener los nombres.
+            // Esto ya limpia comas y valida el rango, úsalo:
+            pedir_coordenadas_seguras(&u_lat, &u_lon); 
             buscar_coordenada(lista_streets, lista_casas, u_lat, u_lon);            
             break;
         }
