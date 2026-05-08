@@ -376,7 +376,6 @@ void buscar_lugar(Place *lista) {
 }
 
 //funciones para liberar la memoria
-
 void liberar_lista(House *lista) {
     while (lista) {
         House *temp = lista;
@@ -391,4 +390,137 @@ void liberar_lugares(Place *lista) {
         lista = lista->next;
         free(temp);
     }
+}
+
+
+// LAB 4
+#define EARTH_RADIUS 6371000.0 // Radio de la Tierra en metros
+#define TO_RAD (3.14159265358979323846 / 180.0) // Conversión de grados a radianes
+
+// Fórmula de Haversine para calcular la distancia entre dos coordenadas
+double haversine(double lat1, double lon1, double lat2, double lon2) {
+    double dLat = (lat2 - lat1) * TO_RAD;
+    double dLon = (lon2 - lon1) * TO_RAD;
+    double lat1_rad = lat1 * TO_RAD;
+    double lat2_rad = lat2 * TO_RAD;
+
+    double a = sin(dLat / 2) * sin(dLat / 2) +
+               sin(dLon / 2) * sin(dLon / 2) * cos(lat1_rad) * cos(lat2_rad);
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    
+    return EARTH_RADIUS * c;
+}
+
+// Añadir una calle a la lista
+Street* add_street(Street *cabeza, long long id1, double lat1, double lon1, long long id2, double lat2, double lon2) {
+    Street *nueva = (Street*)malloc(sizeof(Street));
+    if (nueva == NULL) return cabeza;
+
+    nueva->id1 = id1; nueva->lat1 = lat1; nueva->lon1 = lon1;
+    nueva->id2 = id2; nueva->lat2 = lat2; nueva->lon2 = lon2;
+    
+    // Calculamos y guardamos el punto medio
+    nueva->mid_lat = (lat1 + lat2) / 2.0;
+    nueva->mid_lon = (lon1 + lon2) / 2.0;
+
+    nueva->next = cabeza;
+    return nueva;
+}.       
+
+// Cargamos las calles del archivo
+Street* cargar_streets(char *path, int *total) {
+    FILE *f = fopen(path, "r");
+    if (f == NULL) return NULL;
+
+    Street *cabeza = NULL;
+    char linea[256];
+    *total = 0;
+
+    while (fgets(linea, sizeof(linea), f)) {
+        long long id1, id2;
+        double lat1, lon1, lat2, lon2;
+        
+        if (sscanf(linea, "%lld,%lf,%lf,%lld,%lf,%lf", &id1, &lat1, &lon1, &id2, &lat2, &lon2) == 6) {
+            cabeza = add_street(cabeza, id1, lat1, lon1, id2, lat2, lon2);
+            (*total)++;
+        }
+    }
+    fclose(f);
+    return cabeza;
+}
+
+// Buscar la calle más cercana y sus adyacentes (Linear Search)
+void buscar_coordenada(Street *lista, double user_lat, double user_lon) {
+    if (lista == NULL) {
+        printf("No streets loaded.\n");
+        return;
+    }
+
+    Street *actual = lista;
+    Street *closest = NULL;
+    double min_dist = -1.0;
+
+    // Buscamos la calle más cercana por coordenadas, calculando la distancia al punto medio de cada segmento
+    while (actual != NULL) {
+        double dist = haversine(user_lat, user_lon, actual->mid_lat, actual->mid_lon);
+        if (min_dist < 0 || dist < min_dist) {
+            min_dist = dist;
+            closest = actual;
+        }
+        actual = actual->next;
+    }
+
+    printf("\n    Closest street segment is on intersections: %lld and %lld\n", closest->id1, closest->id2);
+    printf("    Distance to midpoint: %.2f meters\n", min_dist);
+
+    // Buscamos las calles conectadas a la calle más cercana (mirar id1 o id2)
+    printf("\n    Connected street segments in the graph:\n");
+    actual = lista;
+    int found = 0;
+    while (actual != NULL) {
+        if (actual != closest) { // Evitamos que coincida consigo misma
+            // Si comparten algun id, están conectadas
+            if (actual->id1 == closest->id1 || actual->id1 == closest->id2 ||
+                actual->id2 == closest->id1 || actual->id2 == closest->id2) {
+                printf("    - Segment: %lld <-> %lld\n", actual->id1, actual->id2);
+                found++;
+            }
+        }
+        actual = actual->next;
+    }
+    if (found == 0) printf("    - No connected segments found.\n");
+}
+
+// Liberar la memoria de la lista de calles
+void liberar_streets(Street *lista) {
+    while (lista) {
+        Street *temp = lista;
+        lista = lista->next;
+        free(temp);
+    }
+}
+
+//  Función que prueba la lista de calles y muestra las 5 primeras que se cargan
+void test_streets_list() {
+    printf("[UNIT TEST] Running tests for Streets Linked List...\n");
+    Street *test_list = NULL;
+    
+    // probamos la función de añadir calles y los calculos del punto medio
+    test_list = add_street(test_list, 1, 41.0, 2.0, 2, 41.0, 2.2);
+    if (test_list != NULL && test_list->mid_lat == 41.0 && test_list->mid_lon == 2.1) {
+        printf("  [PASS] List insertion & Midpoint calculation\n");
+    } else {
+        printf("  [FAIL] List insertion & Midpoint calculation\n");
+    }
+
+    // comprobamos la función de haversine con dos puntos iguales, la distancia debería ser 0
+    double dist = haversine(41.0, 2.0, 41.0, 2.0); 
+    if (dist == 0.0) {
+        printf("  [PASS] Haversine formula (Distance 0.0)\n");
+    } else {
+        printf("  [FAIL] Haversine formula\n");
+    }
+
+    liberar_streets(test_list);
+    printf("[UNIT TEST] Finished.\n\n");
 }

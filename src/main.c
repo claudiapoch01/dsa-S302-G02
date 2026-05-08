@@ -1,14 +1,23 @@
 #include "sample_lib.h"
 
 int main() {
+
+    // función para probar la lista de calles (muestra las 5 primeras)
+    // test_streets_list(); 
+
     char map_name[20];
     char path_houses[150];
     char path_places[150];
+    char path_streets[150];
+
     int num_houses = 0;
     int num_places = 0;
+    int num_streets = 0;
+
     int opcion;
     House *lista_casas = NULL;
     Place *lista_lugares = NULL;
+    Street *lista_streets = NULL;
 
     while (1) { // va a estar en el bucle hasta que se haga un break al cargar un mapa correctamente
         // pide el nombre del mapa al usuario
@@ -20,23 +29,26 @@ int main() {
             continue; // vuelve a pedir
         }
 
-        // Se crean las rutas de los archivos de casas y lugares
+        // Se crean las rutas de los archivos de casas, lugares y calles
         sprintf(path_houses, "maps/%s/houses.txt", map_name);
         sprintf(path_places, "maps/%s/places.txt", map_name);
+        sprintf(path_streets, "maps/%s/streets.txt", map_name);
 
         num_houses = 0;
         num_places = 0;
+        num_streets = 0;
 
         lista_casas = cargar_mapa(path_houses, &num_houses);
         lista_lugares = cargar_lugares(path_places, &num_places);
+        lista_streets = cargar_streets(path_streets, &num_streets);
 
-        if (lista_casas == NULL && lista_lugares == NULL) {
-            // muestra error si no se han podido cargar datos 
+        if (lista_casas == NULL && lista_lugares == NULL && lista_streets == NULL) { // muestra error si no se han podido cargar datos 
             printf("Error: Could not load map data for '%s'. Check that the folder exists.\n", map_name);
 
             // liberamos la memoria
             if (lista_casas) { liberar_lista(lista_casas); lista_casas = NULL; }
             if (lista_lugares) { liberar_lugares(lista_lugares); lista_lugares = NULL; }
+            if (lista_streets) { liberar_streets(lista_streets); lista_streets = NULL; }
             continue; // vuelve a pedir mapa
         }
 
@@ -46,6 +58,7 @@ int main() {
     // muestra el número de casas y lugares cargados
     printf("%d houses loaded\n", num_houses);
     printf("%d places loaded\n", num_places);
+    printf("%d streets loaded\n", num_streets);
 
     // Muestra el menú de opciones (dirección, lugar o coordenada)
     printf("--- ORIGIN ---\n");
@@ -73,9 +86,16 @@ int main() {
         case 2: // caso 2: lugar
             buscar_lugar(lista_lugares);
             break;
-        case 3: // caso 3: coordenada
-            printf("Not implemented yet.\n");
+        case 3: { // caso 3: coordenada
+            double u_lat, u_lon;
+            printf("Enter your coordinates (latitud longitud): ");
+            if (scanf("%lf %lf", &u_lat, &u_lon) == 2) {
+                buscar_coordenada(lista_streets, u_lat, u_lon); 
+            } else {
+                printf("Invalid coordinates format.\n");
+            }
             break;
+        }
         default:
             printf("Invalid option.\n"); // Si no coincide con ninguna de las opciones, muestra un mensaje de error
             break;
@@ -84,6 +104,7 @@ int main() {
     // Se libera la memoria antes de salir
     if (lista_casas) liberar_lista(lista_casas);
     if (lista_lugares) liberar_lugares(lista_lugares);
+    if (lista_streets) liberar_streets(lista_streets);
 
     return 0;
 }
