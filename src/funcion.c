@@ -425,7 +425,7 @@ Street* add_street(Street *cabeza, long long id1, double lat1, double lon1, long
 
     nueva->next = cabeza;
     return nueva;
-}.       
+}     
 
 // Cargamos las calles del archivo
 Street* cargar_streets(char *path, int *total) {
@@ -469,8 +469,13 @@ void buscar_coordenada(Street *lista, double user_lat, double user_lon) {
         }
         actual = actual->next;
     }
+    
+    if (closest == NULL) {
+        printf("    Could not find any close street segment.\n");
+        return;
+    }
 
-    printf("\n    Closest street segment is on intersections: %lld and %lld\n", closest->id1, closest->id2);
+    printf("\n    Closest street segment is on intersections: %lf and %lf\n", closest->mid_lat, closest->mid_lon);
     printf("    Distance to midpoint: %.2f meters\n", min_dist);
 
     // Buscamos las calles conectadas a la calle más cercana (mirar id1 o id2)
@@ -523,4 +528,72 @@ void test_streets_list() {
 
     liberar_streets(test_list);
     printf("[UNIT TEST] Finished.\n\n");
+}
+
+// Función dedicada a limpiar el string de las coordenadas
+void normalizar_coordenadas_string(char *buffer) {
+    // 1er Paso: Cambiar separadores de coordenadas por espacios
+    // Si hay una coma seguida de un espacio (ej: "41.38, 2.15") o un punto y coma
+    for (int i = 0; buffer[i] != '\0'; i++) {
+        if (buffer[i] == ',' && buffer[i+1] == ' ') {
+            buffer[i] = ' '; // Quitamos la coma separadora
+        } else if (buffer[i] == ';') {
+            buffer[i] = ' '; // Cambiamos el punto y coma por espacio
+        }
+    }
+    
+    // 2º Paso: Cambiar cualquier coma restante por un punto (decimales)
+    // Así convertimos "41,38" en "41.38"
+    for (int i = 0; buffer[i] != '\0'; i++) {
+        if (buffer[i] == ',') {
+            buffer[i] = '.';
+        }
+    }
+}
+
+// Función para pedir y validar las coordenadas
+void pedir_coordenadas_seguras(double *lat, double *lon) {
+    char buffer[150];
+    
+    while (1) {
+        printf("Enter your coordinates (latitud longitud): ");
+        
+        // Leemos la entrada del usuario como un string completo
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+            clearerr(stdin);
+            continue;
+        }
+
+        // Limpiamos el salto de línea final
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len - 1] == '\n') {
+            buffer[len - 1] = '\0';
+        }
+
+        // Llamamos a nuestro normalizador mágico
+        normalizar_coordenadas_string(buffer);
+
+        // Intentamos extraer los dos números (ahora garantizados con punto decimal)
+        if (sscanf(buffer, "%lf %lf", lat, lon) != 2) {
+            printf("    [Error] Invalid input. Please enter two valid numbers.\n");
+            continue; // Vuelve a pedir
+        }
+
+        // Validación del orden de las coordenadas (si están invertidas, se giran)
+        if (*lat < -90.0 || *lat > 90.0) {
+            double temp = *lat;
+            *lat = *lon;
+            *lon = temp;
+            printf("    [Info] Swapped inputs to match (Latitude, Longitude) format.\n");
+        }
+
+        // VALIDACIÓN FINAL: Comprobamos que ambos estén en rangos válidos del planeta Tierra
+        if (*lat < -90.0 || *lat > 90.0 || *lon < -180.0 || *lon > 180.0) {
+            printf("    [Error] Coordinates out of bounds. Lat must be [-90, 90] and Lon [-180, 180].\n");
+            continue; // Vuelve a pedir
+        }
+
+        // Si llegamos aquí, los datos son perfectos
+        break; 
+    }
 }

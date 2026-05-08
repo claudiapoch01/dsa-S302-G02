@@ -88,12 +88,19 @@ int main() {
             break;
         case 3: { // caso 3: coordenada
             double u_lat, u_lon;
+            char buffer[100];
+            int coordenadas_validas = 0;
+
             printf("Enter your coordinates (latitud longitud): ");
-            if (scanf("%lf %lf", &u_lat, &u_lon) == 2) {
-                buscar_coordenada(lista_streets, u_lat, u_lon); 
-            } else {
-                printf("Invalid coordinates format.\n");
+            while (!coordenadas_validas) { // comprobamos que el usuario introduce los valores correctos. Si no, vuelve a pedirlo
+                leer_cadena_segura(buffer, sizeof(buffer));
+                if (sscanf(buffer, "%lf %lf", &u_lat, &u_lon) == 2) {
+                    coordenadas_validas = 1;
+                } else {
+                    printf("Invalid input. You must provide TWO numeric values. Try again: ");
+                }
             }
+            buscar_coordenada(lista_streets, u_lat, u_lon);             
             break;
         }
         default:
