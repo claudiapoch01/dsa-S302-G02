@@ -507,33 +507,33 @@ void liberar_streets(Street *lista) {
 
 //  Función que prueba la lista de calles y muestra las 5 primeras que se cargan
 void test_streets_list() {
-    printf("[UNIT TEST] Running tests for Streets Linked List...\n");
+    printf("Running streets tests...\n");
     Street *test_list = NULL;
     
-    // probamos la función de añadir calles y los calculos del punto medio
+    // comprueba que se añade bien a la lista y calcula el punto medio (midpoint)
     test_list = add_street(test_list, 1, 41.0, 2.0, 2, 41.0, 2.2);
     if (test_list != NULL && test_list->mid_lat == 41.0 && test_list->mid_lon == 2.1) {
-        printf("  [PASS] List insertion & Midpoint calculation\n");
+        printf("  - Test 1 (insert & midpoint): OK\n");
     } else {
-        printf("  [FAIL] List insertion & Midpoint calculation\n");
+        printf("  - Test 1 (insert & midpoint): ERROR\n");
     }
 
-    // comprobamos la función de haversine con dos puntos iguales, la distancia debería ser 0
+    // revisa si la formula de haversine funciona (misma coordenada = 0)
     double dist = haversine(41.0, 2.0, 41.0, 2.0); 
     if (dist == 0.0) {
-        printf("  [PASS] Haversine formula (Distance 0.0)\n");
+        printf("  - Test 2 (haversine): OK\n");
     } else {
-        printf("  [FAIL] Haversine formula\n");
+        printf("  - Test 2 (haversine): ERROR\n");
     }
 
     liberar_streets(test_list);
-    printf("[UNIT TEST] Finished.\n\n");
+    printf("Tests done.\n\n");
 }
 
-// Función dedicada a limpiar el string de las coordenadas
+// Función que normaliza las coordenadas entradas por el usuario 
 void normalizar_coordenadas_string(char *buffer) {
-    // 1er Paso: Cambiar separadores de coordenadas por espacios
-    // Si hay una coma seguida de un espacio (ej: "41.38, 2.15") o un punto y coma
+
+    // Normaliza si hay una coma o punto y coma seguido de espacio y lo quitamos
     for (int i = 0; buffer[i] != '\0'; i++) {
         if (buffer[i] == ',' && buffer[i+1] == ' ') {
             buffer[i] = ' '; // Quitamos la coma separadora
@@ -542,8 +542,7 @@ void normalizar_coordenadas_string(char *buffer) {
         }
     }
     
-    // 2º Paso: Cambiar cualquier coma restante por un punto (decimales)
-    // Así convertimos "41,38" en "41.38"
+    // Cambiamos la coma decimal por un punto
     for (int i = 0; buffer[i] != '\0'; i++) {
         if (buffer[i] == ',') {
             buffer[i] = '.';
@@ -573,7 +572,7 @@ void pedir_coordenadas_seguras(double *lat, double *lon) {
         // Llamamos a nuestro normalizador mágico
         normalizar_coordenadas_string(buffer);
 
-        // Intentamos extraer los dos números (ahora garantizados con punto decimal)
+        // Intentamos encontrar los dos valores
         if (sscanf(buffer, "%lf %lf", lat, lon) != 2) {
             printf("    [Error] Invalid input. Please enter two valid numbers.\n");
             continue; // Vuelve a pedir
@@ -587,13 +586,13 @@ void pedir_coordenadas_seguras(double *lat, double *lon) {
             printf("    [Info] Swapped inputs to match (Latitude, Longitude) format.\n");
         }
 
-        // VALIDACIÓN FINAL: Comprobamos que ambos estén en rangos válidos del planeta Tierra
+        // Comprobamos que las coordenadas existan
         if (*lat < -90.0 || *lat > 90.0 || *lon < -180.0 || *lon > 180.0) {
             printf("    [Error] Coordinates out of bounds. Lat must be [-90, 90] and Lon [-180, 180].\n");
             continue; // Vuelve a pedir
         }
 
-        // Si llegamos aquí, los datos son perfectos
+        // Si llegamos aquí, los datos son correctos
         break; 
     }
 }
