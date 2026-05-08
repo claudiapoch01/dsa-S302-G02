@@ -349,7 +349,6 @@ void buscar_lugar(Place *lista) {
     if (num_coincidencias == 1) { // si solo hay uno, lo muestra
         printf("\n    Found at (%lf, %lf)\n", coincidencias[0]->latitud, coincidencias[0]->longitud);
         return;
-    } else if (num_coincidencias > 1) { // si hay varios, deja elegir
 
         printf("\nMultiple places found with that name:\n");
 
@@ -449,18 +448,30 @@ Street* cargar_streets(char *path, int *total) {
     return cabeza;
 }
 
-// Buscar la calle más cercana y sus adyacentes (Linear Search)
-void buscar_coordenada(Street *lista, double user_lat, double user_lon) {
-    if (lista == NULL) {
-        printf("No streets loaded.\n");
-        return;
-    }
+// Función auxiliar para encontrar el nombre de calle más cercano a un punto
+void obtener_nombre_por_coordenada(House *lista_casas, double lat, double lon, char *dest) {
+    House *actual = lista_casas;
+    double min_dist = -1.0;
+    strcpy(dest, "Calle desconocida"); 
 
-    Street *actual = lista;
+    while (actual != NULL) {
+        double dist = haversine(lat, lon, actual->latitud, actual->longitud);
+        if (min_dist < 0 || dist < min_dist) {
+            min_dist = dist;
+            strncpy(dest, actual->street_name, 99);
+        }
+        actual = actual->next;
+    }
+}
+
+void buscar_coordenada(Street *lista_streets, House *lista_casas, double user_lat, double user_lon) {
+    if (lista_streets == NULL) return;
+
+    Street *actual = lista_streets;
     Street *closest = NULL;
     double min_dist = -1.0;
 
-    // Buscamos la calle más cercana por coordenadas, calculando la distancia al punto medio de cada segmento
+    // Buscamos el segmento más cercano (lógica que ya tenías)
     while (actual != NULL) {
         double dist = haversine(user_lat, user_lon, actual->mid_lat, actual->mid_lon);
         if (min_dist < 0 || dist < min_dist) {
@@ -470,30 +481,34 @@ void buscar_coordenada(Street *lista, double user_lat, double user_lon) {
         actual = actual->next;
     }
     
-    if (closest == NULL) {
-        printf("    Could not find any close street segment.\n");
-        return;
-    }
+    if (closest == NULL) return;
 
-    printf("\n    Closest street segment is on intersections: %lf and %lf\n", closest->mid_lat, closest->mid_lon);
-    printf("    Distance to midpoint: %.2f meters\n", min_dist);
+    char nombre_principal[100];
+    obtener_nombre_por_coordenada(lista_casas, closest->mid_lat, closest->mid_lon, nombre_principal);
 
-    // Buscamos las calles conectadas a la calle más cercana (mirar id1 o id2)
-    printf("\n    Connected street segments in the graph:\n");
-    actual = lista;
+    printf("\n    Estas cerca de: %s\n", nombre_principal);
+    printf("    Distancia: %.2f metros\n", min_dist);
+
+    printf("\n    Calles conectadas (intersecciones):\n");
+    actual = lista_streets;
     int found = 0;
-    while (actual != NULL) {
-        if (actual != closest) { // Evitamos que coincida consigo misma
-            // Si comparten algun id, están conectadas
+    while (actual != NULL && found < 2) { // Sugerimos 2 calles
+        if (actual != closest) {
             if (actual->id1 == closest->id1 || actual->id1 == closest->id2 ||
                 actual->id2 == closest->id1 || actual->id2 == closest->id2) {
-                printf("    - Segment: %lld <-> %lld\n", actual->id1, actual->id2);
-                found++;
+                
+                char nombre_sugerido[100];
+                obtener_nombre_por_coordenada(lista_casas, actual->mid_lat, actual->mid_lon, nombre_sugerido);
+                
+                // Evitamos repetir el nombre de la calle donde ya estamos
+                if (strcmp(nombre_principal, nombre_sugerido) != 0) {
+                    printf("    - %s\n", nombre_sugerido);
+                    found++;
+                }
             }
         }
         actual = actual->next;
     }
-    if (found == 0) printf("    - No connected segments found.\n");
 }
 
 // Liberar la memoria de la lista de calles

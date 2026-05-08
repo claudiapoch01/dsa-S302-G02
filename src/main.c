@@ -88,19 +88,14 @@ int main() {
             break;
         case 3: { // caso 3: coordenada
             double u_lat, u_lon;
-            char buffer[100];
-            int coordenadas_validas = 0;
-
-            printf("Enter your coordinates (latitud longitud): ");
-            while (!coordenadas_validas) { // comprobamos que el usuario introduce los valores correctos. Si no, vuelve a pedirlo
-                leer_cadena_segura(buffer, sizeof(buffer));
-                if (sscanf(buffer, "%lf %lf", &u_lat, &u_lon) == 2) {
-                    coordenadas_validas = 1;
-                } else {
-                    printf("Invalid input. You must provide TWO numeric values. Try again: ");
-                }
-            }
-            buscar_coordenada(lista_streets, u_lat, u_lon);             
+            
+            // 1. Usamos la función segura que ya tienes en tu código.
+            // Esta ya valida los números, limpia el buffer y arregla el orden lat/lon.
+            pedir_coordenadas_seguras(&u_lat, &u_lon);
+            
+            // 2. Llamamos a la función de búsqueda pasando AMBAS listas.
+            // Es obligatorio pasar lista_casas para poder obtener los nombres.
+            buscar_coordenada(lista_streets, lista_casas, u_lat, u_lon);            
             break;
         }
         default:
