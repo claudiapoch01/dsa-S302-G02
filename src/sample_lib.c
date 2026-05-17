@@ -1,4 +1,6 @@
 #include "sample_lib.h"
+#include <math.h>
+#include <float.h>
 
 //utilidades
 
@@ -440,7 +442,7 @@ double haversine(double lat1, double lon1, double lat2, double lon2) {
 }
 
 // Añadir una calle a la lista
-Street* add_street(Street *cabeza, long long id1, double lat1, double lon1, long long id2, double lat2, double lon2) {
+Street* add_street(Street *cabeza, long long id1, double lat1, double lon1, long long id2, double lat2, double lon2, char *name) {
     Street *nueva = (Street*)malloc(sizeof(Street));
     if (nueva == NULL) return cabeza;
 
@@ -451,9 +453,12 @@ Street* add_street(Street *cabeza, long long id1, double lat1, double lon1, long
     nueva->mid_lat = (lat1 + lat2) / 2.0;
     nueva->mid_lon = (lon1 + lon2) / 2.0;
 
+    // Copiamos el nombre de la calle de forma segura al nuevo campo
+    snprintf(nueva->street_name, sizeof(nueva->street_name), "%s", name);
+
     nueva->next = cabeza;
     return nueva;
-}     
+}
 
 // Cargamos las calles del archivo
 Street* cargar_streets(char *path, int *total) {
@@ -467,9 +472,17 @@ Street* cargar_streets(char *path, int *total) {
     while (fgets(linea, sizeof(linea), f)) {
         long long id1, id2;
         double lat1, lon1, lat2, lon2;
+        char nombre_calle[100] = "";
         
-        if (sscanf(linea, "%lld,%lf,%lf,%lld,%lf,%lf", &id1, &lat1, &lon1, &id2, &lat2, &lon2) == 6) {
-            cabeza = add_street(cabeza, id1, lat1, lon1, id2, lat2, lon2);
+        if (sscanf(linea, "%lld,%lf,%lf,%lld,%lf,%lf,%*f,%[^\n]", &id1, &lat1, &lon1, &id2, &lat2, &lon2, nombre_calle) >= 6) {
+            
+            // Si la calle no tiene nombre, le ponemos un geneerico
+            if (strlen(nombre_calle) == 0) {
+                strcpy(nombre_calle, "Calle sin nombre");
+            }
+
+            // Pasamos el nombre como último parámetro
+            cabeza = add_street(cabeza, id1, lat1, lon1, id2, lat2, lon2, nombre_calle);
             (*total)++;
         }
     }
@@ -477,21 +490,6 @@ Street* cargar_streets(char *path, int *total) {
     return cabeza;
 }
 
-// Función auxiliar para encontrar el nombre de calle más cercano a un punto
-void obtener_nombre_por_coordenada(House *lista_casas, double lat, double lon, char *dest) {
-    House *actual = lista_casas;
-    double min_dist = -1.0;
-    strcpy(dest, "Calle desconocida"); 
-
-    while (actual != NULL) {
-        double dist = haversine(lat, lon, actual->latitud, actual->longitud);
-        if (min_dist < 0 || dist < min_dist) {
-            min_dist = dist;
-            strncpy(dest, actual->street_name, 99);
-        }
-        actual = actual->next;
-    }
-}
 
 void buscar_coordenada(Street *lista_streets, House *lista_casas, double user_lat, double user_lon) {
     if (lista_streets == NULL) return;
@@ -500,7 +498,7 @@ void buscar_coordenada(Street *lista_streets, House *lista_casas, double user_la
     Street *closest = NULL;
     double min_dist = -1.0;
 
-    // Buscamos el segmento más cercano
+    //Buscamos el segmento de calle más cercano al usuario con Haversire
     while (actual != NULL) {
         double dist = haversine(user_lat, user_lon, actual->mid_lat, actual->mid_lon);
         if (min_dist < 0 || dist < min_dist) {
@@ -510,34 +508,62 @@ void buscar_coordenada(Street *lista_streets, House *lista_casas, double user_la
         actual = actual->next;
     }
     
-    if (closest == NULL) return;
+    if (closest == NULL) {
+        printf("No street segments found near these coordinates.\n");
+        return;
+    }
 
-    char nombre_principal[100];
-    obtener_nombre_por_coordenada(lista_casas, closest->mid_lat, closest->mid_lon, nombre_principal);
+    //imprimimos los datos 
+    printf("\nFound at (%lf, %lf)\n", user_lat, user_lon);
+    printf("Closest street: %s\n", closest->street_name);
+    printf("Between %lld (%lf, %lf) and %lld (%lf, %lf)\n", 
+           closest->id1, closest->lat1, closest->lon1, 
+           closest->id2, closest->lat2, closest->lon2);
+    printf("Distance to street center: %.2f meters\n", min_dist);
 
-    printf("\n    Estas cerca de: %s\n", nombre_principal);
-    printf("    Distancia: %.2f metros\n", min_dist);
+    //Buscamos para imprimir las calles de las intersecciones 
+    printf("\nFrom this street segment, you can go to:\n");
+    printf("- %s\n", closest->street_name);
+    printf("    Which is connected to:\n");
 
-    printf("\n    Calles conectadas (intersecciones):\n");
     actual = lista_streets;
-    int found = 0;
-    while (actual != NULL && found < 2) { // Sugerimos 2 calles
+    char calles_sugeridas[10][100]; // Array auxiliar para evitar duplicar nombres
+    int num_sugeridas = 0;
+
+    while (actual != NULL) {
+        // Buscamos segmentos diferentes que compartan alguno de los extremos(nodos) con el nuestro
         if (actual != closest) {
             if (actual->id1 == closest->id1 || actual->id1 == closest->id2 ||
                 actual->id2 == closest->id1 || actual->id2 == closest->id2) {
                 
-                char nombre_sugerido[100];
-                obtener_nombre_por_coordenada(lista_casas, actual->mid_lat, actual->mid_lon, nombre_sugerido);
-                
-                // Evitamos repetir el nombre de la calle donde ya estamos
-                if (strcmp(nombre_principal, nombre_sugerido) != 0) {
-                    printf("    - %s\n", nombre_sugerido);
-                    found++;
+                // Asi evitaremos sugerir la misma calle principal en la que ya estamos 
+                if (strcmp(closest->street_name, actual->street_name) != 0) {
+                    
+                    // Comprobamos si ya hemos impreso esta calle conectada para no repetirla
+                    int ya_existe = 0;
+                    for (int i = 0; i < num_sugeridas; i++) {
+                        if (strcmp(calles_sugeridas[i], actual->street_name) == 0) {
+                            ya_existe = 1;
+                            break;
+                        }
+                    }
+
+                    // Si es una calle nueva conectada
+                    if (!ya_existe && num_sugeridas < 10) {
+                        strcpy(calles_sugeridas[num_sugeridas], actual->street_name);
+                        num_sugeridas++;
+                        printf("     - %s\n", actual->street_name);
+                    }
                 }
             }
         }
         actual = actual->next;
     }
+
+    if (num_sugeridas == 0) {
+        printf("     - No distinct connecting streets found (dead end or single segment).\n");
+    }
+    printf("\n");
 }
 
 // Liberar la memoria de la lista de calles
@@ -549,7 +575,7 @@ void liberar_streets(Street *lista) {
     }
 }
 
-//  Función que prueba la lista de calles y muestra las 5 primeras que se cargan
+//Función que prueba la lista de calles y muestra las 5 primeras que se cargan
 void test_streets_list() {
     printf("Running streets tests...\n");
     Street *test_list = NULL;
@@ -714,12 +740,11 @@ void liberar_grafo(Grafo *g) {
     g->total_nodos = 0;
 }
 
-//Encuentra el nodo del grafo que está mas cerca linealmente de las coordenadas q le hemos dado
+// Encuentra el nodo del grafo que está más cerca linealmente de las coordenadas dadas
 long long buscar_nodo_mas_cercano(Grafo *g, double lat, double lon) {
     if (g == NULL || g->total_nodos == 0) return -1;
 
     long long id_mejor = g->nodos[0].id;
-    //hacemos pitagoras 
     double d_lat = g->nodos[0].latitud - lat;
     double d_lon = g->nodos[0].longitud - lon;
     double min_dist_cuadrado = (d_lat * d_lat) + (d_lon * d_lon);
@@ -735,8 +760,9 @@ long long buscar_nodo_mas_cercano(Grafo *g, double lat, double lon) {
         }
     }
     return id_mejor;
+} 
 
-    // Función auxiliar para obtener la posición en el array dado un ID de nodo
+// Función auxiliar para obtener la posición en el array dado un ID de nodo
 int obtener_indice_nodo(Grafo *g, long long id) {
     for (int i = 0; i < g->total_nodos; i++) {
         if (g->nodos[i].id == id) return i;
@@ -754,56 +780,76 @@ void imprimir_instrucciones_giros(Grafo *g, House *lista_casas, int *camino, int
     char calle_actual[100];
     char calle_siguiente[100];
 
-    // Averiguamos el nombre de la calle inicial
-    obtener_nombre_por_coordenada(lista_casas, g->nodos[camino[0]].latitud, g->nodos[camino[0]].longitud, calle_actual);
-    printf("  Start at %s\n", calle_actual);
+    // Buscamos el nombre de la calle en base a las coordenadas en la lista de casas de forma segura
+    House *actual_casa = lista_casas;
+    double min_d = -1.0;
+    strcpy(calle_actual, "Calle inicial");
+    while (actual_casa != NULL) {
+        double d = haversine(g->nodos[camino[0]].latitud, g->nodos[camino[0]].longitud, actual_casa->latitud, actual_casa->longitud);
+        if (min_d < 0 || d < min_d) { min_d = d; strncpy(calle_actual, actual_casa->street_name, 99); }
+        actual_casa = actual_casa->next;
+    }
 
+    printf(" Start at %s\n", calle_actual);
     double distancia_acumulada = 0.0;
 
     for (int i = 0; i < tam_camino - 1; i++) {
         int nodo_act = camino[i];
         int nodo_sig = camino[i + 1];
 
-        // Calculamos la distancia del segmento actual empleando Haversine
         double dist_tramo = haversine(g->nodos[nodo_act].latitud, g->nodos[nodo_act].longitud,
                                       g->nodos[nodo_sig].latitud, g->nodos[nodo_sig].longitud);
         distancia_acumulada += dist_tramo;
 
-        // Si es el último nodo o cambia el nombre de la calle en el siguiente nodo, imprimimos la maniobra
         if (i == tam_camino - 2) {
-            obtener_nombre_por_coordenada(lista_casas, g->nodos[nodo_sig].latitud, g->nodos[nodo_sig].longitud, calle_siguiente);
+            // Último tramo del viaje
+            actual_casa = lista_casas; min_d = -1.0; strcpy(calle_siguiente, "Destino");
+            while (actual_casa != NULL) {
+                double d = haversine(g->nodos[nodo_sig].latitud, g->nodos[nodo_sig].longitud, actual_casa->latitud, actual_casa->longitud);
+                if (min_d < 0 || d < min_d) { min_d = d; strncpy(calle_siguiente, actual_casa->street_name, 99); }
+                actual_casa = actual_casa->next;
+            }
             printf("  Continue to %s and walk for %.0fm\n", calle_siguiente, distancia_acumulada);
         } 
         else {
             int nodo_sig_sig = camino[i + 2];
             char calle_sig_sig[100];
-            obtener_nombre_por_coordenada(lista_casas, g->nodos[nodo_sig_sig].latitud, g->nodos[nodo_sig_sig].longitud, calle_sig_sig);
-            obtener_nombre_por_coordenada(lista_casas, g->nodos[nodo_sig].latitud, g->nodos[nodo_sig].longitud, calle_siguiente);
+            
+            // Deducimos el nombre de la calle del nodo subsiguiente
+            actual_casa = lista_casas; min_d = -1.0; strcpy(calle_sig_sig, "Siguiente Calle");
+            while (actual_casa != NULL) {
+                double d = haversine(g->nodos[nodo_sig_sig].latitud, g->nodos[nodo_sig_sig].longitud, actual_casa->latitud, actual_casa->longitud);
+                if (min_d < 0 || d < min_d) { min_d = d; strncpy(calle_sig_sig, actual_casa->street_name, 99); }
+                actual_casa = actual_casa->next;
+            }
 
-            // Detectamos si hay un cambio de calle real en la siguiente intersección
-            if (strcmp(calle_actual, calle_sig_sig) != 0 && strcmp(calle_siguiente, calle_sig_sig) != 0) {
+            // Si hay un cambio de calle real en la intersección, calculamos la maniobra
+            if (strcmp(calle_actual, calle_sig_sig) != 0) {
                 
-                // --- PRODUCTO VECTORIAL (Cross Product) para calcular la dirección del giro ---
-                // Vector A: Del nodo actual al siguiente
-                double ax = g->nodos[nodo_sig].longitud - g->nodos[nodo_act].longitud;
+                //Escalamos los vectores usando la media de la Latitud ---
+                double lat_media = g->nodos[nodo_sig].latitud * (3.1415926535 / 180.0);
+                double factor_escala_lon = cos(lat_media);
+
+                // Vector A (en "grados corregidos")
+                double ax = (g->nodos[nodo_sig].longitud - g->nodos[nodo_act].longitud) * factor_escala_lon;
                 double ay = g->nodos[nodo_sig].latitud - g->nodos[nodo_act].latitud;
                 
-                // Vector B: Del nodo siguiente al subsiguiente
-                double bx = g->nodos[nodo_sig_sig].longitud - g->nodos[nodo_sig].longitud;
+                // Vector B (en "grados corregidos")
+                double bx = (g->nodos[nodo_sig_sig].longitud - g->nodos[nodo_sig].longitud) * factor_escala_lon;
                 double by = g->nodos[nodo_sig_sig].latitud - g->nodos[nodo_sig].latitud;
 
-                // Componente Z del producto vectorial en 2D
+                // Componente Z del producto vectorial 2D
                 double cross_product = (ax * by) - (ay * bx);
 
-                if (cross_product > 0.000001) {
+                // Con los vectores corregidos, el umbral de tolerancia ahora es mucho más preciso (1e-9)
+                if (cross_product > 1e-9) {
                     printf("  Turn left to %s and continue for %.0fm\n", calle_sig_sig, distancia_acumulada);
-                } else if (cross_product < -0.000001) {
+                } else if (cross_product < -1e-9) {
                     printf("  Turn right to %s and continue for %.0fm\n", calle_sig_sig, distancia_acumulada);
                 } else {
                     printf("  Continue straight to %s and walk for %.0fm\n", calle_sig_sig, distancia_acumulada);
                 }
 
-                // Reiniciamos el contador de metros para la nueva calle
                 distancia_acumulada = 0.0;
                 strcpy(calle_actual, calle_sig_sig);
             }
@@ -814,31 +860,38 @@ void imprimir_instrucciones_giros(Grafo *g, House *lista_casas, int *camino, int
 
 // Algoritmo de Dijkstra para encontrar el camino de menor coste en metros
 void calcular_ruta_dijkstra(Grafo *g, House *lista_casas, long long id_origen, long long id_destino) {
+    // 1. Convertimos los IDs geográficos de los nodos a los índices (posiciones) de nuestro array dinámico de nodos
     int idx_origen = obtener_indice_nodo(g, id_origen);
     int idx_destino = obtener_indice_nodo(g, id_destino);
 
+    // Validación por seguridad
     if (idx_origen == -1 || idx_destino == -1) {
         printf("Error: No se pudieron mapear los nodos de origen o destino en el grafo.\n");
         return;
     }
 
-    // Reservamos arrays dinámicos para el estado de Dijkstra
+    //Reservamos memoria y preparamos los arrays 
+
     double *distancia = (double *)malloc(g->total_nodos * sizeof(double));
     int *visitado = (int *)calloc(g->total_nodos, sizeof(int));
     int *padre = (int *)malloc(g->total_nodos * sizeof(int));
 
+    // Inicialización del estado: asumimos que todos los nodos están a una distancia "infinita" (1e9 metros) y no tienen padre
     for (int i = 0; i < g->total_nodos; i++) {
-        distancia[i] = 1e9; //Inicializamos las distancias como un "infinito" teórico
+        distancia[i] = 1e9; 
         padre[i] = -1;
     }
 
+    // El nodo de origen está a distancia 0 de sí mismo
     distancia[idx_origen] = 0.0;
 
+    //Algoritmo de DIJKSTRA
+    // Evaluamos los nodos del grafo uno a uno para encontrar sus caminos mínimos
     for (int count = 0; count < g->total_nodos - 1; count++) {
-        //Encontramos el nodo no visitado con la distancia mínima actual
         double min_dist = 1e9;
         int u = -1;
 
+        // Buscamos el nodo 'u' que no haya sido visitado todavía y que tenga la distancia acumulada más pequeña
         for (int v = 0; v < g->total_nodos; v++) {
             if (!visitado[v] && distancia[v] < min_dist) {
                 min_dist = distancia[v];
@@ -846,54 +899,57 @@ void calcular_ruta_dijkstra(Grafo *g, House *lista_casas, long long id_origen, l
             }
         }
 
-        // Si no encontramos ningún nodo accesible o alcanzamos el destino, paramos 
+        // Si no encontramos ningún nodo accesible, os otros estarsn desconnectados o ya habremos llegado al destino, salimos del bucle
         if (u == -1 || u == idx_destino) break;
 
+        // mmarcamos el nodo actual como visitado
         visitado[u] = 1;
 
-        // Evaluamos los costes de los nodos vecinos conectados
+        //Evaluamos todos los vecinos directos conectados al nodo 'u' actual
         for (int i = 0; i < g->nodos[u].num_vecinos; i++) {
-            int v = g->nodos[u].vecinos[i].nodo_destino;
-            double peso = g->nodos[u].vecinos[i].peso;
+            int v = g->nodos[u].vecinos[i].nodo_destino; 
+            double peso = g->nodos[u].vecinos[i].peso;    
 
+            //si descubrimos que pasar por 'u' ofrece un camino más corto hacia 'v' que el que ya conocíamos, actualizamos
             if (!visitado[v] && distancia[u] + peso < distancia[v]) {
-                distancia[v] = distancia[u] + peso;
-                padre[v] = u;
+                distancia[v] = distancia[u] + peso; // Actualizamos la nueva distancia mínima
+                padre[v] = u;                     
             }
         }
     }
 
-    // Si el coste al destino sigue siendo infinito, es que los puntos están desconectados
+    
+    // Si la distancia calculada hasta el destino sigue siendo el infinito teórico, es que no hay calles que los conecten
     if (distancia[idx_destino] >= 1e9) {
         printf("No existe una ruta transitable entre los dos puntos seleccionados.\n");
     } else {
-
-        // Reconstruimos el camino inverso recorriendo los nodos padres
+        // Reservamos un array auxiliar para reconstruir la lista de nodos por los que pasaremos
         int *camino = (int *)malloc(g->total_nodos * sizeof(int));
         int tam_camino = 0;
         int curr = idx_destino;
 
+        // Reconstruimos el camino empezando en el destino y seguimos la cadena de 'padres' hasta llegar al origen
         while (curr != -1) {
             camino[tam_camino++] = curr;
             curr = padre[curr];
         }
 
-        //Damos la vuelta al array para tener el camino en el orden correcto del origen al destion
+        // El camino está al revés asi que le damos la vuelta para ordenarlo de origen a destino
         for (int i = 0; i < tam_camino / 2; i++) {
             int temp = camino[i];
             camino[i] = camino[tam_camino - 1 - i];
             camino[tam_camino - 1 - i] = temp;
         }
 
-        // Imprimimos la ruta 
+        // Enviamos el camino ordenado a la función que calcula los giros y nos da las instrucciones de texto en la pantalla
         imprimir_instrucciones_giros(g, lista_casas, camino, tam_camino);
         
+        //Liberamos el array dinámico local del camino
         free(camino);
     }
 
-    //Liberamos los recursos auxiliares del algoritmo
+    //liberamos los recursos auxiliares
     free(distancia);
     free(visitado);
     free(padre);
-}
 }
