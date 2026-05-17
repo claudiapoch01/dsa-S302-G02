@@ -97,7 +97,7 @@ int main() {
     }
 
     if (opcion == 1) {
-        buscar_direccion(lista_casas, &lat_origen, &lon_origen)
+        buscar_direccion(lista_casas, &lat_origen, &lon_origen); 
     } else if (opcion == 2) {
         buscar_lugar(lista_lugares, &lat_origen, &lon_origen);
     } else if (opcion == 3) {
