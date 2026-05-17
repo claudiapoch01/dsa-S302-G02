@@ -39,25 +39,25 @@ typedef struct Street {
 
 // Estructuras para los grafos: 
 
-// Estructura para representar una conexión directa a un nodo vecino
+//estructura para representar una conexión directa a un nodo vecino
 typedef struct {
-    int nodo_destino;      // Índice en el array del nodo vecino
+    int nodo_destino;      //indice en el array del nodo vecino
     double peso;           // Distancia en metros (peso del vertice)
 } Adyacencia;
 
-// Estructura para cada intersección única (Nodo del Grafo)
+// Estructura para cada intersección (Nodo del Grafo)
 typedef struct {
     long long id;          // El id del mapa (id1 o id2 de los ficheros)
     double latitud;
     double longitud;
-    Adyacencia *vecinos;   // Array dinámico de conexiones
+    Adyacencia *vecinos;   // Array dinámico de las conexiones
     int num_vecinos;       // Cuantos vecinos tiene este nodo
 } NodoGrafo;
 
-// Estructura global que envuelve todo el Grafo
+//Estructura global de todo el Grafo
 typedef struct {
     NodoGrafo *nodos;      // Array dinámico de todos los nodos únicos
-    int total_nodos;       // Número total de nodos del array
+    int total_nodos;       // Numero total de nodos en el array
 } Grafo;
 
 // Funciones para direcciones
