@@ -1,12 +1,6 @@
-int fact(int n) {
-  if (n <= 1)
-    return 1;
-  return n * fact(n - 1);
-}
-
 #include "sample_lib.h"
 
-// utilidades
+//utilidades
 
 int minimo(int a, int b, int c) { // Nos devuelve el entero mas pequeño entre tres
     int m = a;
@@ -188,7 +182,7 @@ void leer_cadena_segura(char *buffer, int size) {
     }
 }
 
-// funciones para gestionar casas
+// gestion de casas
 
 House* cargar_mapa(char *path, int *total) {
     FILE *f = fopen(path, "r"); //abre el mapa en modo de lectura
@@ -270,7 +264,7 @@ void buscar_direccion(House *lista) {
         
         // aqui lista los números válidos
         printf("Enter one of the valid numbers: ");
-        while (scanf("%d", &num_search) != 1) { // <--- Añade esta validación aquí también
+        while (scanf("%d", &num_search) != 1) { 
             printf("Invalid input. Please enter a numeric value: ");
             int c; while ((c = getchar()) != '\n');
         }
@@ -290,7 +284,7 @@ void buscar_direccion(House *lista) {
     }
 }
 
-// funciones para gestionar lugares
+//gestion de lugares
 
 Place* cargar_lugares(char *path, int *total) {
     FILE *f = fopen(path, "r");
@@ -351,11 +345,12 @@ void buscar_lugar(Place *lista) {
         }
         actual = actual->next;
     }
-    // comprobamos si hay varios lugares que se llaman igual
-    if (num_coincidencias == 1) { // si solo hay uno, lo muestra
-        printf("\n    Found at (%lf, %lf)\n", coincidencias[0]->latitud, coincidencias[0]->longitud);
-        return;
 
+    // Arreglado el problema del return que bloqueaba la selección múltiple
+    if (num_coincidencias == 1) { 
+        printf("\n    Found at (%lf, %lf)\n", coincidencias[0]->latitud, coincidencias[0]->longitud);
+    } 
+    else if (num_coincidencias > 1) { 
         printf("\nMultiple places found with that name:\n");
 
         // por cada una de las coincidencias, muestra su nombre y coordenadas para que el usuario pueda elegir
@@ -380,7 +375,7 @@ void buscar_lugar(Place *lista) {
     }
 }
 
-//funciones para liberar la memoria
+// funciones para liberar la memoria
 void liberar_lista(House *lista) {
     while (lista) {
         House *temp = lista;
@@ -397,8 +392,8 @@ void liberar_lugares(Place *lista) {
     }
 }
 
+// gestion de calles y coordenadas
 
-// LAB 4
 #define EARTH_RADIUS 6371000.0 // Radio de la Tierra en metros
 #define TO_RAD (3.14159265358979323846 / 180.0) // Conversión de grados a radianes
 
@@ -477,9 +472,8 @@ void buscar_coordenada(Street *lista_streets, House *lista_casas, double user_la
     Street *closest = NULL;
     double min_dist = -1.0;
 
-    // Buscamos el segmento más cercano (lógica que ya tenías)
+    // Buscamos el segmento más cercano
     while (actual != NULL) {
-        // Dentro de buscar_coordenada:
         double dist = haversine(user_lat, user_lon, actual->mid_lat, actual->mid_lon);
         if (min_dist < 0 || dist < min_dist) {
             min_dist = dist;
@@ -554,7 +548,6 @@ void test_streets_list() {
 
 // Función que normaliza las coordenadas entradas por el usuario 
 void normalizar_coordenadas_string(char *buffer) {
-
     // Normaliza si hay una coma o punto y coma seguido de espacio y lo quitamos
     for (int i = 0; buffer[i] != '\0'; i++) {
         if (buffer[i] == ',' && buffer[i+1] == ' ') {
@@ -617,4 +610,101 @@ void pedir_coordenadas_seguras(double *lat, double *lon) {
         // Si llegamos aquí, los datos son correctos
         break; 
     }
+}
+
+//Construccion del grafo
+
+int buscar_o_insertar_nodo(Grafo *g, long long id, double lat, double lon) {
+    // Si el nodo ya existe en el grafo, devolvemos su posición
+    for (int i = 0; i < g->total_nodos; i++) {
+        if (g->nodos[i].id == id) {
+            return i; 
+        }
+    }
+    // Si no existe, redimensionamos el array para meter un nuevo nodo
+    g->total_nodos++;
+    g->nodos = (NodoGrafo *)realloc(g->nodos, g->total_nodos * sizeof(NodoGrafo));
+    if (g->nodos == NULL) {
+        printf("Error fatal: No hay memoria para expandir los nodos del grafo.\n");
+        exit(1);
+    }
+    
+    int nuevo_indice = g->total_nodos - 1;
+    g->nodos[nuevo_indice].id = id;
+    g->nodos[nuevo_indice].latitud = lat;
+    g->nodos[nuevo_indice].longitud = lon;
+    g->nodos[nuevo_indice].vecinos = NULL; 
+    g->nodos[nuevo_indice].num_vecinos = 0;
+
+    return nuevo_indice; 
+}
+
+void añadir_adyacencia(NodoGrafo *nodo, int destino, double peso) {
+    nodo->num_vecinos++;
+    nodo->vecinos = (Adyacencia *)realloc(nodo->vecinos, nodo->num_vecinos * sizeof(Adyacencia));
+    if (nodo->vecinos == NULL) {
+        printf("Error fatal: No hay memoria para añadir vecinos al nodo.\n");
+        exit(1);
+    }
+    nodo->vecinos[nodo->num_vecinos - 1].nodo_destino = destino;
+    nodo->vecinos[nodo->num_vecinos - 1].peso = peso;
+}
+
+Grafo construir_grafo(Street *lista_streets) {
+    Grafo g;
+    g.nodos = NULL;
+    g.total_nodos = 0;
+
+    Street *actual = lista_streets;
+    while (actual != NULL) {
+        // Encontrar o crear los índices para los dos extremos del segmento de calle
+        int indice_origen = buscar_o_insertar_nodo(&g, actual->id1, actual->lat1, actual->lon1);
+        int indice_destino = buscar_o_insertar_nodo(&g, actual->id2, actual->lat2, actual->lon2);
+
+        // Calculamos el coste real de la arista mediante Haversine (en metros)
+        double distancia = haversine(actual->lat1, actual->lon1, actual->lat2, actual->lon2);
+
+        // Las calles se pueden recorrer en ambos sentidos: Grafo No Dirigido
+        añadir_adyacencia(&g.nodos[indice_origen], indice_destino, distancia);
+        añadir_adyacencia(&g.nodos[indice_destino], indice_origen, distancia); 
+
+        actual = actual->next; 
+    }
+    return g; 
+}
+
+void liberar_grafo(Grafo *g) {
+    if (g->nodos != NULL) {
+        for (int i = 0; i < g->total_nodos; i++) {
+            if (g->nodos[i].vecinos != NULL) {
+                free(g->nodos[i].vecinos);
+            }
+        }
+        free(g->nodos);
+        g->nodos = NULL;
+    }
+    g->total_nodos = 0;
+}
+
+//Encuentra el nodo del grafo que está mas cerca linealmente de las coordenadas q le hemos dado
+long long buscar_nodo_mas_cercano(Grafo *g, double lat, double lon) {
+    if (g == NULL || g->total_nodos == 0) return -1;
+
+    long long id_mejor = g->nodos[0].id;
+    //hacemos pitagoras 
+    double d_lat = g->nodos[0].latitud - lat;
+    double d_lon = g->nodos[0].longitud - lon;
+    double min_dist_cuadrado = (d_lat * d_lat) + (d_lon * d_lon);
+
+    for (int i = 1; i < g->total_nodos; i++) {
+        d_lat = g->nodos[i].latitud - lat;
+        d_lon = g->nodos[i].longitud - lon;
+        double dist_actual = (d_lat * d_lat) + (d_lon * d_lon);
+
+        if (dist_actual < min_dist_cuadrado) {
+            min_dist_cuadrado = dist_actual;
+            id_mejor = g->nodos[i].id;
+        }
+    }
+    return id_mejor;
 }
