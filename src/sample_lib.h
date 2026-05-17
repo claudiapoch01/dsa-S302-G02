@@ -37,6 +37,29 @@ typedef struct Street {
     struct Street *next; 
 } Street;
 
+// Estructuras para los grafos: 
+
+// Estructura para representar una conexión directa a un nodo vecino
+typedef struct {
+    int nodo_destino;      // Índice en el array del nodo vecino
+    double peso;           // Distancia en metros (peso del vertice)
+} Adyacencia;
+
+// Estructura para cada intersección única (Nodo del Grafo)
+typedef struct {
+    long long id;          // El id del mapa (id1 o id2 de los ficheros)
+    double latitud;
+    double longitud;
+    Adyacencia *vecinos;   // Array dinámico de conexiones
+    int num_vecinos;       // Cuantos vecinos tiene este nodo
+} NodoGrafo;
+
+// Estructura global que envuelve todo el Grafo
+typedef struct {
+    NodoGrafo *nodos;      // Array dinámico de todos los nodos únicos
+    int total_nodos;       // Número total de nodos del array
+} Grafo;
+
 // Funciones para direcciones
 int distancia_levenshtein(char *s1, char *s2);
 House* cargar_mapa(char *path, int *total);
@@ -65,4 +88,11 @@ void pedir_coordenadas_seguras(double *lat, double *lon);
 void leer_cadena_segura(char *buffer, int size);
 int mapa_valido(const char *m);
 void test_streets_list();
+
+//funciones para el grafo 
+Grafo construir_grafo(Street *lista_streets);
+int buscar_o_insertar_nodo(Grafo *g, long long id, double lat, double lon);
+void añadir_adyacencia(NodoGrafo *nodo, int destino, double peso);
+void liberar_grafo(Grafo *g);
+
 #endif
