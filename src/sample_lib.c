@@ -211,12 +211,12 @@ House* cargar_mapa(char *path, int *total) {
     fclose(f);    
     return cabeza;
 }
-
-void buscar_direccion(House *lista) {
+void buscar_direccion(House *lista, double *res_lat, double *res_lon) {
     char raw_name[100], street_search[100];
     int num_search;
 
     printf("Enter street name: ");
+    
     leer_cadena_segura(raw_name, 100); // leemos el nombre de la calle
     normalizar_nombre(street_search, sizeof(street_search), raw_name); // normalizamos el nombre de la calle
 
@@ -230,6 +230,7 @@ void buscar_direccion(House *lista) {
 
     House *actual = lista;
     House *mejor_calle_nodo = NULL;
+    House *casa_elegida = NULL; // Puntero para registrar la casa final encontrada
     int min_dist = 100;
     int calle_exacta_encontrada = 0;
 
@@ -237,8 +238,8 @@ void buscar_direccion(House *lista) {
         if (strcasecmp(actual->street_name, street_search) == 0) { // comprueba si encuentra la calle
             calle_exacta_encontrada = 1;
             if (actual->house_number == num_search) { //comprueba si existe el número en esa calle
-                printf("\n    Found at (%lf, %lf)\n", actual->latitud, actual->longitud);
-                return;
+                casa_elegida = actual;
+                break; // Rompemos el bucle porque ya la tenemos
             }
         }
         
@@ -250,8 +251,8 @@ void buscar_direccion(House *lista) {
         }
         actual = actual->next;
     }
-
-    if (calle_exacta_encontrada) { // si la calle existe pero el número no, se le vuelve a pedir el número al usuario
+    // Si no se encontró la casa exacta a la primera, pero la calle sí existe
+    if (!casa_elegida && calle_exacta_encontrada) { // si la calle existe pero el número no, se le vuelve a pedir el número al usuario
         printf("Invalid number. Valid numbers in %s: ", street_search);
         actual = lista;
         while (actual != NULL) {
@@ -273,14 +274,26 @@ void buscar_direccion(House *lista) {
         actual = lista;
         while (actual != NULL) {
             if (strcasecmp(actual->street_name, street_search) == 0 && actual->house_number == num_search) {
-                printf("\n    Found at (%lf, %lf)\n", actual->latitud, actual->longitud);
-                return;
+                casa_elegida = actual;
+                break;
             }
             actual = actual->next;
         }
-        printf("Still an invalid number.\n"); //si el número sigue siendo incorrecto, muestra el mensaje
-    } else if (mejor_calle_nodo != NULL) {
+        if (!casa_elegida) {
+            printf("Still an invalid number.\n"); //si el número sigue siendo incorrecto, muestra el mensaje
+        }
+    } else if (!casa_elegida && mejor_calle_nodo != NULL) {
         printf("Street not found. Did you mean: %s?\n", mejor_calle_nodo->street_name);
+    }
+    
+    // Al final centralizamos el guardado de datos hacia el main
+    if (casa_elegida != NULL) {
+        printf("\n    Found at (%lf, %lf)\n", casa_elegida->latitud, casa_elegida->longitud);
+        *res_lat = casa_elegida->latitud;
+        *res_lon = casa_elegida->longitud;
+    } else {
+        *res_lat = 0.0;
+        *res_lon = 0.0;
     }
 }
 
@@ -307,7 +320,7 @@ Place* cargar_lugares(char *path, int *total) {
     return cabeza;
 }
 
-void buscar_lugar(Place *lista) {
+void buscar_lugar(Place *lista, double *res_lat, double *res_lon) {
     char search_name[150];
     char search_name_normalizado[150];
     
@@ -324,6 +337,9 @@ void buscar_lugar(Place *lista) {
 
     Place *mejor_lugar = NULL;
     int min_dist = 100;
+
+    // Puntero para registrar cuál es el lugar definitivo seleccionado al final
+    Place *lugar_elegido = NULL;
 
     while (actual != NULL) {
         char place_sin_acentos[150];
@@ -348,7 +364,8 @@ void buscar_lugar(Place *lista) {
 
     // Arreglado el problema del return que bloqueaba la selección múltiple
     if (num_coincidencias == 1) { 
-        printf("\n    Found at (%lf, %lf)\n", coincidencias[0]->latitud, coincidencias[0]->longitud);
+        lugar_elegido = coincidencias[0];
+        printf("\n    Found at (%lf, %lf)\n", lugar_elegido->latitud, lugar_elegido->longitud);
     } 
     else if (num_coincidencias > 1) { 
         printf("\nMultiple places found with that name:\n");
@@ -365,13 +382,24 @@ void buscar_lugar(Place *lista) {
             int c; while ((c = getchar()) != '\n');
         }
         
-        printf("\n    Selected: %s at (%lf, %lf)\n", coincidencias[seleccion - 1]->name, coincidencias[seleccion - 1]->latitud, coincidencias[seleccion - 1]->longitud);
+        lugar_elegido = coincidencias[seleccion - 1];
+        printf("\n    Selected: %s at (%lf, %lf)\n", lugar_elegido->name, lugar_elegido->latitud, lugar_elegido->longitud);
     } 
     else if (mejor_lugar != NULL && min_dist < 10) {
         printf("Place not found. Did you mean: %s?\n", mejor_lugar->name);
     } 
     else {
         printf("Place not found.\n");
+    }
+
+    // Solo si el usuario ha seleccionado con éxito un lugar real, guardamos las coordenadas en el main
+    if (lugar_elegido != NULL) {
+        *res_lat = lugar_elegido->latitud;
+        *res_lon = lugar_elegido->longitud;
+    } else {
+        //si falla la busqueda ponemos por defecto 0.0
+        *res_lat = 0.0;
+        *res_lon = 0.0;
     }
 }
 
@@ -707,4 +735,165 @@ long long buscar_nodo_mas_cercano(Grafo *g, double lat, double lon) {
         }
     }
     return id_mejor;
+
+    // Función auxiliar para obtener la posición en el array dado un ID de nodo
+int obtener_indice_nodo(Grafo *g, long long id) {
+    for (int i = 0; i < g->total_nodos; i++) {
+        if (g->nodos[i].id == id) return i;
+    }
+    return -1;
+}
+
+// Función que lee el camino de nodos reconstruido y computa las distancias y los giros (Cross Product)
+void imprimir_instrucciones_giros(Grafo *g, House *lista_casas, int *camino, int tam_camino) {
+    if (tam_camino < 2) {
+        printf("Ya estás en el destino.\n");
+        return;
+    }
+
+    char calle_actual[100];
+    char calle_siguiente[100];
+
+    // Averiguamos el nombre de la calle inicial
+    obtener_nombre_por_coordenada(lista_casas, g->nodos[camino[0]].latitud, g->nodos[camino[0]].longitud, calle_actual);
+    printf("  Start at %s\n", calle_actual);
+
+    double distancia_acumulada = 0.0;
+
+    for (int i = 0; i < tam_camino - 1; i++) {
+        int nodo_act = camino[i];
+        int nodo_sig = camino[i + 1];
+
+        // Calculamos la distancia del segmento actual empleando Haversine
+        double dist_tramo = haversine(g->nodos[nodo_act].latitud, g->nodos[nodo_act].longitud,
+                                      g->nodos[nodo_sig].latitud, g->nodos[nodo_sig].longitud);
+        distancia_acumulada += dist_tramo;
+
+        // Si es el último nodo o cambia el nombre de la calle en el siguiente nodo, imprimimos la maniobra
+        if (i == tam_camino - 2) {
+            obtener_nombre_por_coordenada(lista_casas, g->nodos[nodo_sig].latitud, g->nodos[nodo_sig].longitud, calle_siguiente);
+            printf("  Continue to %s and walk for %.0fm\n", calle_siguiente, distancia_acumulada);
+        } 
+        else {
+            int nodo_sig_sig = camino[i + 2];
+            char calle_sig_sig[100];
+            obtener_nombre_por_coordenada(lista_casas, g->nodos[nodo_sig_sig].latitud, g->nodos[nodo_sig_sig].longitud, calle_sig_sig);
+            obtener_nombre_por_coordenada(lista_casas, g->nodos[nodo_sig].latitud, g->nodos[nodo_sig].longitud, calle_siguiente);
+
+            // Detectamos si hay un cambio de calle real en la siguiente intersección
+            if (strcmp(calle_actual, calle_sig_sig) != 0 && strcmp(calle_siguiente, calle_sig_sig) != 0) {
+                
+                // --- PRODUCTO VECTORIAL (Cross Product) para calcular la dirección del giro ---
+                // Vector A: Del nodo actual al siguiente
+                double ax = g->nodos[nodo_sig].longitud - g->nodos[nodo_act].longitud;
+                double ay = g->nodos[nodo_sig].latitud - g->nodos[nodo_act].latitud;
+                
+                // Vector B: Del nodo siguiente al subsiguiente
+                double bx = g->nodos[nodo_sig_sig].longitud - g->nodos[nodo_sig].longitud;
+                double by = g->nodos[nodo_sig_sig].latitud - g->nodos[nodo_sig].latitud;
+
+                // Componente Z del producto vectorial en 2D
+                double cross_product = (ax * by) - (ay * bx);
+
+                if (cross_product > 0.000001) {
+                    printf("  Turn left to %s and continue for %.0fm\n", calle_sig_sig, distancia_acumulada);
+                } else if (cross_product < -0.000001) {
+                    printf("  Turn right to %s and continue for %.0fm\n", calle_sig_sig, distancia_acumulada);
+                } else {
+                    printf("  Continue straight to %s and walk for %.0fm\n", calle_sig_sig, distancia_acumulada);
+                }
+
+                // Reiniciamos el contador de metros para la nueva calle
+                distancia_acumulada = 0.0;
+                strcpy(calle_actual, calle_sig_sig);
+            }
+        }
+    }
+    printf(" You have arrived at your destination.\n");
+}
+
+// Algoritmo de Dijkstra para encontrar el camino de menor coste en metros
+void calcular_ruta_dijkstra(Grafo *g, House *lista_casas, long long id_origen, long long id_destino) {
+    int idx_origen = obtener_indice_nodo(g, id_origen);
+    int idx_destino = obtener_indice_nodo(g, id_destino);
+
+    if (idx_origen == -1 || idx_destino == -1) {
+        printf("Error: No se pudieron mapear los nodos de origen o destino en el grafo.\n");
+        return;
+    }
+
+    // Reservamos arrays dinámicos para el estado de Dijkstra
+    double *distancia = (double *)malloc(g->total_nodos * sizeof(double));
+    int *visitado = (int *)calloc(g->total_nodos, sizeof(int));
+    int *padre = (int *)malloc(g->total_nodos * sizeof(int));
+
+    for (int i = 0; i < g->total_nodos; i++) {
+        distancia[i] = 1e9; //Inicializamos las distancias como un "infinito" teórico
+        padre[i] = -1;
+    }
+
+    distancia[idx_origen] = 0.0;
+
+    for (int count = 0; count < g->total_nodos - 1; count++) {
+        //Encontramos el nodo no visitado con la distancia mínima actual
+        double min_dist = 1e9;
+        int u = -1;
+
+        for (int v = 0; v < g->total_nodos; v++) {
+            if (!visitado[v] && distancia[v] < min_dist) {
+                min_dist = distancia[v];
+                u = v;
+            }
+        }
+
+        // Si no encontramos ningún nodo accesible o alcanzamos el destino, paramos 
+        if (u == -1 || u == idx_destino) break;
+
+        visitado[u] = 1;
+
+        // Evaluamos los costes de los nodos vecinos conectados
+        for (int i = 0; i < g->nodos[u].num_vecinos; i++) {
+            int v = g->nodos[u].vecinos[i].nodo_destino;
+            double peso = g->nodos[u].vecinos[i].peso;
+
+            if (!visitado[v] && distancia[u] + peso < distancia[v]) {
+                distancia[v] = distancia[u] + peso;
+                padre[v] = u;
+            }
+        }
+    }
+
+    // Si el coste al destino sigue siendo infinito, es que los puntos están desconectados
+    if (distancia[idx_destino] >= 1e9) {
+        printf("No existe una ruta transitable entre los dos puntos seleccionados.\n");
+    } else {
+
+        // Reconstruimos el camino inverso recorriendo los nodos padres
+        int *camino = (int *)malloc(g->total_nodos * sizeof(int));
+        int tam_camino = 0;
+        int curr = idx_destino;
+
+        while (curr != -1) {
+            camino[tam_camino++] = curr;
+            curr = padre[curr];
+        }
+
+        //Damos la vuelta al array para tener el camino en el orden correcto del origen al destion
+        for (int i = 0; i < tam_camino / 2; i++) {
+            int temp = camino[i];
+            camino[i] = camino[tam_camino - 1 - i];
+            camino[tam_camino - 1 - i] = temp;
+        }
+
+        // Imprimimos la ruta 
+        imprimir_instrucciones_giros(g, lista_casas, camino, tam_camino);
+        
+        free(camino);
+    }
+
+    //Liberamos los recursos auxiliares del algoritmo
+    free(distancia);
+    free(visitado);
+    free(padre);
+}
 }
