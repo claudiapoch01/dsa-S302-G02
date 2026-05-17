@@ -97,9 +97,9 @@ int main() {
     }
 
     if (opcion == 1) {
-        buscar_direccion(lista_casas);
+        buscar_direccion(lista_casas, &lat_origen, &lon_origen)
     } else if (opcion == 2) {
-        buscar_lugar(lista_lugares);
+        buscar_lugar(lista_lugares, &lat_origen, &lon_origen);
     } else if (opcion == 3) {
         pedir_coordenadas_seguras(&lat_origen, &lon_origen);
         buscar_coordenada(lista_streets, lista_casas, lat_origen, lon_origen);
@@ -126,9 +126,9 @@ int main() {
     }
 
     if (opcion == 1) {
-        buscar_direccion(lista_casas);
+        buscar_direccion(lista_casas, &lat_destino, &lon_destino);
     } else if (opcion == 2) {
-        buscar_lugar(lista_lugares);
+        buscar_lugar(lista_lugares, &lat_destino, &lon_destino);
     } else if (opcion == 3) {
         pedir_coordenadas_seguras(&lat_destino, &lon_destino);
         buscar_coordenada(lista_streets, lista_casas, lat_destino, lon_destino);
