@@ -98,6 +98,6 @@ long long buscar_nodo_mas_cercano(Grafo *g, double lat, double lon); //devuelve 
 
 // Funciones para calcular las rutas con Dijkstra
 int obtener_indice_nodo(Grafo *g, long long id);
-void calcular_ruta_dijkstra(Grafo *g, House *lista_casas, long long id_origen, long long id_destino);
+void calcular_ruta_dijkstra(Grafo *g, House *lista_casas, long long origen, long long destino);
 
 #endif
