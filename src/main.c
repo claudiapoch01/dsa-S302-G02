@@ -135,8 +135,14 @@ int main() {
     }
 
     //Rute 
-    printf("\n- ROUTE -\n");
-    // TODO: Aquí llamaremos a calcular_ruta(mi_grafo, lat_origen, lon_origen, lat_destino, lon_destino);
+    // Buscamos los nodos del grafo que esten más cerca a las coordenadas de origen y destino 
+    long long id_nodo_origen = buscar_nodo_mas_cercano(&mi_grafo, lat_origen, lon_origen);
+    long long id_nodo_destino = buscar_nodo_mas_cercano(&mi_grafo, lat_destino, lon_destino);
+
+    printf("Closest origin graph node: %lld\n", id_nodo_origen);
+    printf("Closest destination graph node: %lld\n\n", id_nodo_destino);
+
+    calcular_ruta_dijkstra(&mi_grafo, lista_casas, id_nodo_origen, id_nodo_destino);
 
     // Se libera la memoria antes de salir
     if (lista_casas) liberar_lista(lista_casas); 
