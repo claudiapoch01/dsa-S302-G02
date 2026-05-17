@@ -581,7 +581,7 @@ void test_streets_list() {
     Street *test_list = NULL;
     
     // comprueba que se añade bien a la lista y calcula el punto medio (midpoint)
-    test_list = add_street(test_list, 1, 41.0, 2.0, 2, 41.0, 2.2);
+    test_list = add_street(test_list, 1, 41.0, 2.0, 2, 41.0, 2.2, "Calle de Test"); 
     if (test_list != NULL && test_list->mid_lat == 41.0 && test_list->mid_lon == 2.1) {
         printf("  - Test 1 (insert & midpoint): OK\n");
     } else {
