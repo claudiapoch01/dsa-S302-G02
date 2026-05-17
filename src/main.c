@@ -148,7 +148,7 @@ int main() {
     if (lista_casas) liberar_lista(lista_casas); 
     if (lista_lugares) liberar_lugares(lista_lugares);
     if (lista_streets) liberar_streets(lista_streets);
-    liberar_grafo(&mi_grafo); // Liberamos la memoria dinámica del grafo
+    liberar_grafo(&mi_grafo); // Liberamos la memoria dinamica del grafo
 
     return 0;
 }
