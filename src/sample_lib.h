@@ -64,12 +64,12 @@ typedef struct {
 int distancia_levenshtein(char *s1, char *s2);
 House* cargar_mapa(char *path, int *total);
 House* add_casa(House *cabeza, char *street, int num, double lat, double lon);
-void buscar_direccion(House *lista);
+void buscar_direccion(House *lista, double *res_lat, double *res_lon);
 
 // Funciones para lugares
 Place* cargar_lugares(char *path, int *total);
 Place* add_lugar(Place *cabeza, char *name, double lat, double lon);
-void buscar_lugar(Place *lista);
+void buscar_lugar(Place *lista, double *res_lat, double *res_lon);
 void liberar_lugares(Place *lista);
 void liberar_lista(House *lista);
 
@@ -94,5 +94,10 @@ Grafo construir_grafo(Street *lista_streets);
 int buscar_o_insertar_nodo(Grafo *g, long long id, double lat, double lon);
 void añadir_adyacencia(NodoGrafo *nodo, int destino, double peso);
 void liberar_grafo(Grafo *g);
+long long buscar_nodo_mas_cercano(Grafo *g, double lat, double lon); //devuelve el id 
+
+// Funciones para calcular las rutas con Dijkstra
+int obtener_indice_nodo(Grafo *g, long long id);
+void calcular_ruta_dijkstra(Grafo *g, House *lista_casas, long long id_origen, long long id_destino);
 
 #endif
