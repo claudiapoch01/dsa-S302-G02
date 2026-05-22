@@ -86,10 +86,15 @@ int main() {
         case 2: // caso 2: lugar
             buscar_lugar(lista_lugares);
             break;
-        case 3: {
+        case 3: { // caso 3: coordenada
             double u_lat, u_lon;
-            // Esto ya limpia comas y valida el rango, úsalo:
-            pedir_coordenadas_seguras(&u_lat, &u_lon); 
+            
+            // 1. Usamos la función que ya programaste en function.c
+            // Esto limpia el main y aprovecha tus validaciones de lat/lon
+            pedir_coordenadas_seguras(&u_lat, &u_lon);
+            
+            // 2. Llamamos a buscar_coordenada pasando AMBAS listas
+            // Esto es lo que permite "traducir" IDs a nombres de calles
             buscar_coordenada(lista_streets, lista_casas, u_lat, u_lon);            
             break;
         }
