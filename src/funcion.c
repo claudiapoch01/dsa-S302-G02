@@ -102,73 +102,6 @@ void quitar_acentos(char *cadena) {
     cadena[j] = '\0';  // usamos un caracter vacio para acabar la palabra
 }
 
-// funcion para normalizar las direcciones
-void normalizar_nombre(char *dest, size_t dest_size, const char *src) {
-    if (!dest || dest_size == 0) return;
-    if (!src) { dest[0] = '\0'; return; }
-
-    const char *rest = src;
-    const char *prefix_out = NULL;
-
-    // se usa la funcion strncasecmp que es como strncmp pero ignora mayúsculas y minúsculas
-    // comprueba las abreviaturas de calle (C., C/, etc) y las normaliza a 'Carrer'
-    if (strncasecmp(src, "C. de ", 6) == 0 || strncasecmp(src, "C/ de ", 6) == 0) {
-        prefix_out = "Carrer "; rest = src + 6;
-    } else if (strncasecmp(src, "Carrer de ", 10) == 0) {
-        prefix_out = "Carrer "; rest = src + 10;
-    } else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) {
-        prefix_out = "Carrer "; rest = src + 3;
-    } else if (strncasecmp(src, "Carrer ", 7) == 0) {
-        prefix_out = "Carrer "; rest = src + 7;
-    }
-    // comprobaciones de abreviaturas de avenida (Av., Avda., etc) y las normaliza a 'Avinguda'
-    else if (strncasecmp(src, "Avda. de ", 9) == 0) {
-        prefix_out = "Avinguda "; rest = src + 9;
-    } else if (strncasecmp(src, "Av. de ", 7) == 0) {
-        prefix_out = "Avinguda "; rest = src + 7;
-    } else if (strncasecmp(src, "Avinguda de ", 12) == 0) {
-        prefix_out = "Avinguda "; rest = src + 12;
-    } else if (strncasecmp(src, "Avda. ", 6) == 0) {
-        prefix_out = "Avinguda "; rest = src + 6;
-    } else if (strncasecmp(src, "Av. ", 4) == 0) {
-        prefix_out = "Avinguda "; rest = src + 4;
-    } else if (strncasecmp(src, "Avinguda ", 9) == 0) {
-        prefix_out = "Avinguda "; rest = src + 9;
-    }
-    // comprobaciones de abreviaturas de plaza (Pca., Pl., etc) y las normaliza a 'Placa'
-    else if (strncasecmp(src, "Pca. de ", 8) == 0) {
-        prefix_out = "Placa "; rest = src + 8;
-    } else if (strncasecmp(src, "Pl. de ", 7) == 0) {
-        prefix_out = "Placa "; rest = src + 7;
-    } else if (strncasecmp(src, "Plaça de ", 10) == 0) {
-        prefix_out = "Placa "; rest = src + 10;
-    } else if (strncasecmp(src, "Placa de ", 9) == 0) {
-        prefix_out = "Placa "; rest = src + 9;
-    } else if (strncasecmp(src, "Pl. ", 4) == 0) {
-        prefix_out = "Placa "; rest = src + 4;
-    } else if (strncasecmp(src, "Pca. ", 5) == 0) {
-        prefix_out = "Placa "; rest = src + 5;
-    } else if (strncasecmp(src, "Plaça ", 7) == 0) {
-        prefix_out = "Placa "; rest = src + 7;
-    } else if (strncasecmp(src, "Placa ", 6) == 0) {
-        prefix_out = "Placa "; rest = src + 6;
-    }
-    // comprobaciones de abreviaturas de rambla (Rbla., Rbla de., etc) y las normaliza a 'Rambla'
-    else if (strncasecmp(src, "Rbla. de ", 9) == 0) {
-        prefix_out = "Rambla "; rest = src + 9;
-    } else if (strncasecmp(src, "Rbla de ", 8) == 0) {
-        prefix_out = "Rambla "; rest = src + 8;
-    } else if (strncasecmp(src, "Rambla de ", 10) == 0) {
-        prefix_out = "Rambla "; rest = src + 10;
-    }
-
-    // si coincide con alguna abreviatura, se normaliza y se copia el resto del nombre tal cual
-    if (prefix_out) snprintf(dest, dest_size, "%s%s", prefix_out, rest);
-    else snprintf(dest, dest_size, "%s", src);  // si no coincide con ninguna de las abreviaturas, se copia el nombre tal cual
-
-    quitar_acentos(dest);// eliminamos acentos
-}
-
 void leer_cadena_segura(char *buffer, int size) {
     if (fgets(buffer, size, stdin) != NULL) {
         size_t len = strlen(buffer);
@@ -282,6 +215,95 @@ void buscar_direccion(House *lista) {
     } else if (mejor_calle_nodo != NULL) {
         printf("Street not found. Did you mean: %s?\n", mejor_calle_nodo->street_name);
     }
+}void buscar_direccion(House *lista, double *res_lat, double *res_lon) {
+    char raw_name[100], street_search[100];
+    int num_search;
+
+    printf("Enter street name: ");
+    leer_cadena_segura(raw_name, 100); 
+    normalizar_nombre(street_search, sizeof(street_search), raw_name); // Normaliza y quita acentos
+
+    printf("Enter street number: ");
+    while (scanf("%d", &num_search) != 1) { 
+        printf("Invalid input. Please enter a numeric value: ");
+        int c; while ((c = getchar()) != '\n'); // Limpia el buffer si no es un número
+    }
+    while (getchar() != '\n'); // Limpia el salto de línea residual
+
+    House *actual = lista;
+    House *mejor_calle_nodo = NULL;
+    House *casa_elegida = NULL; 
+    int min_dist = 100;
+    int calle_exacta_encontrada = 0;
+
+    // --- PRIMERA PASADA: BUSCAR LA CALLE Y EL NÚMERO ---
+    while (actual != NULL) {
+        if (strcasecmp(actual->street_name, street_search) == 0) { 
+            calle_exacta_encontrada = 1; // Registramos que la calle sí existe en la base de datos
+            if (actual->house_number == num_search) { 
+                casa_elegida = actual;
+                break; // ¡Solo salimos si encontramos la calle Y el número exacto!
+            }
+        }
+        
+        // Paralelamente calculamos Levenshtein por si acaso la calle estuviera mal escrita
+        int d = distancia_levenshtein(street_search, actual->street_name);
+        if (d < min_dist) {
+            min_dist = d;
+            mejor_calle_nodo = actual;
+        }
+        actual = actual->next;
+    }
+
+    // --- LOGICA DE CORRECCIÓN SI EL NÚMERO NO EXISTE ---
+    if (!casa_elegida && calle_exacta_encontrada) { 
+        // La calle existe, pero el número introducido no. Mostramos los portales válidos.
+        printf("Invalid number. Valid numbers in %s: ", street_search);
+        actual = lista;
+        while (actual != NULL) {
+            if (strcasecmp(actual->street_name, street_search) == 0) {
+                printf("%d ", actual->house_number);
+            }
+            actual = actual->next;
+        }
+        printf("\n");
+        
+        // Le damos una segunda oportunidad al usuario para escribir un número correcto
+        printf("Enter one of the valid numbers: ");
+        while (scanf("%d", &num_search) != 1) { 
+            printf("Invalid input. Please enter a numeric value: ");
+            int c; while ((c = getchar()) != '\n');
+        }
+        while (getchar() != '\n');
+        
+        // Volvemos a buscar el nuevo número en la lista
+        actual = lista;
+        while (actual != NULL) {
+            if (strcasecmp(actual->street_name, street_search) == 0 && actual->house_number == num_search) {
+                casa_elegida = actual;
+                break;
+            }
+            actual = actual->next;
+        }
+        if (!casa_elegida) {
+            printf("Still an invalid number.\n"); 
+        }
+    } 
+    // Si la calle ni siquiera existía, sugerimos la más cercana usando Levenshtein
+    else if (!casa_elegida && mejor_calle_nodo != NULL) {
+        printf("Street not found. Did you mean: %s?\n", mejor_calle_nodo->street_name);
+    }
+    
+    // --- ASIGNACIÓN DE RESULTADOS POR REFERENCIA AL MAIN ---
+    if (casa_elegida != NULL) {
+        printf("\n    Found at (%lf, %lf)\n", casa_elegida->latitud, casa_elegida->longitud);
+        *res_lat = casa_elegida->latitud;
+        *res_lon = casa_elegida->longitud;
+    } else {
+        // Si no se encuentra nada tras los intentos, devolvemos 0.0 para evitar basura en memoria
+        *res_lat = 0.0;
+        *res_lon = 0.0;
+    }
 }
 
 // funciones para gestionar lugares
@@ -307,7 +329,7 @@ Place* cargar_lugares(char *path, int *total) {
     return cabeza;
 }
 
-void buscar_lugar(Place *lista) {
+void buscar_lugar(Place *lista, double *res_lat, double *res_lon) {
     char search_name[150];
     char search_name_normalizado[150];
     
@@ -324,6 +346,9 @@ void buscar_lugar(Place *lista) {
 
     Place *mejor_lugar = NULL;
     int min_dist = 100;
+
+    // Puntero para registrar cuál es el lugar definitivo seleccionado al final
+    Place *lugar_elegido = NULL;
 
     while (actual != NULL) {
         char place_sin_acentos[150];
@@ -345,11 +370,13 @@ void buscar_lugar(Place *lista) {
         }
         actual = actual->next;
     }
-    // comprobamos si hay varios lugares que se llaman igual
-    if (num_coincidencias == 1) { // si solo hay uno, lo muestra
-        printf("\n    Found at (%lf, %lf)\n", coincidencias[0]->latitud, coincidencias[0]->longitud);
-        return;
 
+    // --- CORRECCIÓN DE LA ESTRUCTURA DE LLAVES (IF / ELSE IF) ---
+    if (num_coincidencias == 1) { // si solo hay uno, lo asigna directamente
+        lugar_elegido = coincidencias[0];
+        printf("\n    Found at (%lf, %lf)\n", lugar_elegido->latitud, lugar_elegido->longitud);
+    } 
+    else if (num_coincidencias > 1) { // si hay varios, entra aquí correctamente
         printf("\nMultiple places found with that name:\n");
 
         // por cada una de las coincidencias, muestra su nombre y coordenadas para que el usuario pueda elegir
@@ -363,14 +390,26 @@ void buscar_lugar(Place *lista) {
             printf("Invalid selection. Please choose a number between 1 and %d: ", num_coincidencias);
             int c; while ((c = getchar()) != '\n');
         }
+        while (getchar() != '\n'); // Limpiamos el buffer del scanf
         
-        printf("\n    Selected: %s at (%lf, %lf)\n", coincidencias[seleccion - 1]->name, coincidencias[seleccion - 1]->latitud, coincidencias[seleccion - 1]->longitud);
+        lugar_elegido = coincidencias[seleccion - 1];
+        printf("\n    Selected: %s at (%lf, %lf)\n", lugar_elegido->name, lugar_elegido->latitud, lugar_elegido->longitud);
     } 
     else if (mejor_lugar != NULL && min_dist < 10) {
         printf("Place not found. Did you mean: %s?\n", mejor_lugar->name);
     } 
     else {
         printf("Place not found.\n");
+    }
+
+    // --- ASIGNACIÓN DE COORDENADAS DE VUELTA AL MAIN ---
+    if (lugar_elegido != NULL) {
+        *res_lat = lugar_elegido->latitud;
+        *res_lon = lugar_elegido->longitud;
+    } else {
+        // si falla la búsqueda ponemos por defecto 0.0
+        *res_lat = 0.0;
+        *res_lon = 0.0;
     }
 }
 
