@@ -332,28 +332,20 @@ Street* cargar_streets(char *path, int *total) {
         
         nombre_calle[0] = '\0'; 
         
-        // Leemos explícitamente el campo del peso (%lf) en la séptima posición
+        // Forzamos a leer las 8 columnas estrictas del fichero
         int leidos = sscanf(linea, "%lld,%lf,%lf,%lld,%lf,%lf,%lf,%[^\n]", 
                             &id1, &lat1, &lon1, &id2, &lat2, &lon2, &peso_fichero, nombre_calle);
         
-        if (leidos >= 7) {
-            if (leidos == 7 || strlen(nombre_calle) == 0) {
-                strcpy(nombre_calle, "Calle sin nombre");
-            }
-
+        // Descartamos cualquier línea corrupta o incompleta que altere el contador
+        if (leidos == 8 && strlen(nombre_calle) > 0) {
             Street *nueva = (Street*)malloc(sizeof(Street));
             if (nueva != NULL) {
                 nueva->id1 = id1; nueva->lat1 = lat1; nueva->lon1 = lon1;
                 nueva->id2 = id2; nueva->lat2 = lat2; nueva->lon2 = lon2;
-                nueva->mid_lat = (lat1 + lat2) / 2.0;
-                nueva->mid_lon = (lon1 + lon2) / 2.0;
                 
-                // Guardamos el coste precalculado del archivo en el campo mid_lat temporalmente o añade un campo .peso si tu struct lo permite.
-                // Como no queremos tocar el archivo .h, guardaremos el peso leídos del fichero en un truco: reutilizar un double.
-                // Mejor aún: calculamos la adyacencia del grafo usando el peso del fichero directamente abajo en construir_grafo.
-                // Para no romper tu estructura original, alteramos construir_grafo para leer el fichero de nuevo o pasamos el peso de forma nativa:
-                nueva->mid_lat = (lat1 + lat2) / 2.0;
-                nueva->mid_lon = (lon1 + lon2) / 2.0;
+                // Guardamos el peso original de la columna 7 en mid_lat para Dijkstra
+                nueva->mid_lat = peso_fichero; 
+                nueva->mid_lon = 0.0; 
                 
                 snprintf(nueva->street_name, sizeof(nueva->street_name), "%s", nombre_calle);
                 nueva->next = cabeza;
@@ -373,8 +365,12 @@ void buscar_coordenada(Street *lista_streets, House *lista_casas, double user_la
     Street *closest = NULL;
     double min_dist = -1.0;
 
+    // 1. Encontrar el tramo de calle más cercano
     while (actual != NULL) {
-        double dist = haversine(user_lat, user_lon, actual->mid_lat, actual->mid_lon);
+        double real_mid_lat = (actual->lat1 + actual->lat2) / 2.0;
+        double real_mid_lon = (actual->lon1 + actual->lon2) / 2.0;
+        
+        double dist = haversine(user_lat, user_lon, real_mid_lat, real_mid_lon);
         if (min_dist < 0 || dist < min_dist) {
             min_dist = dist;
             closest = actual;
@@ -384,7 +380,7 @@ void buscar_coordenada(Street *lista_streets, House *lista_casas, double user_la
     
     if (closest == NULL) return;
 
-    // Ajustado al formato exacto de texto que pide tu plantilla
+    // Formato exacto requerido por el enunciado
     printf("    Closest street: %s\n", closest->street_name);
     printf("    Between %lld (%lf, %lf) and %lld (%lf, %lf)\n", 
            closest->id1, closest->lat1, closest->lon1, 
@@ -395,28 +391,50 @@ void buscar_coordenada(Street *lista_streets, House *lista_casas, double user_la
     printf("        Which is connected to:\n");
 
     actual = lista_streets;
-    char calles_sugeridas[20][100]; 
+    char calles_sugeridas[30][100]; 
     int num_sugeridas = 0;
 
     while (actual != NULL) {
         if (actual != closest) {
+            // Comprobamos la conexión física por ID de nodo
             if (actual->id1 == closest->id1 || actual->id1 == closest->id2 ||
                 actual->id2 == closest->id1 || actual->id2 == closest->id2) {
                 
-                // Agregamos a la lista de conexiones sin repetir nombres idénticos consecutivos
-                int ya_existe = 0;
-                for (int i = 0; i < num_sugeridas; i++) {
-                    if (strcasecmp(calles_sugeridas[i], actual->street_name) == 0) {
-                        ya_existe = 1;
-                        break;
+                // --- SOLUCIÓN EVOLUCIONADA ---
+                // Buscamos el nombre real normalizado mapeando el punto medio del segmento vecino 
+                // contra la lista de casas para asegurar consistencia total de nombres.
+                char nombre_vecino[100];
+                House *act_casa = lista_casas;
+                double m_d = -1.0;
+                strcpy(nombre_vecino, "Calle desconocida");
+                
+                double v_mid_lat = (actual->lat1 + actual->lat2) / 2.0;
+                double v_mid_lon = (actual->lon1 + actual->lon2) / 2.0;
+                
+                while (act_casa != NULL) {
+                    double d = haversine(v_mid_lat, v_mid_lon, act_casa->latitud, act_casa->longitud);
+                    if (m_d < 0 || d < m_d) { 
+                        m_d = d; 
+                        strncpy(nombre_vecino, act_casa->street_name, 99); 
                     }
+                    act_casa = act_casa->next;
                 }
 
-                if (!ya_existe && num_sugeridas < 20) {
-                    strcpy(calles_sugeridas[num_sugeridas], actual->street_name);
-                    num_sugeridas++;
-                    // Imprimimos con la tabulación exacta del enunciado
-                    printf("         - %s\n", actual->street_name);
+                // Si el nombre de la calle conectada es distinto al de nuestra calle actual
+                if (strcasecmp(closest->street_name, nombre_vecino) != 0) {
+                    int ya_existe = 0;
+                    for (int i = 0; i < num_sugeridas; i++) {
+                        if (strcasecmp(calles_sugeridas[i], nombre_vecino) == 0) {
+                            ya_existe = 1;
+                            break;
+                        }
+                    }
+
+                    if (!ya_existe && num_sugeridas < 30) {
+                        strcpy(calles_sugeridas[num_sugeridas], nombre_vecino);
+                        num_sugeridas++;
+                        printf("         - %s\n", nombre_vecino);
+                    }
                 }
             }
         }
@@ -468,15 +486,13 @@ Grafo construir_grafo(Street *lista_streets) {
     g.nodos = NULL;
     g.total_nodos = 0;
 
-    // Para sincronizar los pesos exactos del fichero sin modificar sample_lib.h,
-    // recalculamos la distancia usando la misma lógica uniforme o leyendo el campo del fichero.
     Street *actual = lista_streets;
     while (actual != NULL) {
         int indice_origen = buscar_o_insertar_nodo(&g, actual->id1, actual->lat1, actual->lon1);
         int indice_destino = buscar_o_insertar_nodo(&g, actual->id2, actual->lat2, actual->lon2);
 
-        // Coste estandarizado del segmento
-        double distancia = haversine(actual->lat1, actual->lon1, actual->lat2, actual->lon2);
+        // Recuperamos el peso de coste original del archivo que resguardamos en cargar_streets
+        double distancia = actual->mid_lat; 
 
         añadir_adyacencia(&g.nodos[indice_origen], indice_destino, distancia);
         añadir_adyacencia(&g.nodos[indice_destino], indice_origen, distancia); 
