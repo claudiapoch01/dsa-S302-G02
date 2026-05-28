@@ -3,19 +3,19 @@
 ## 1. Runtime Complexity Analysis
 
 ### 1.1 Initializing the Intersections Map
-* **Best Case:** $O(V + E)$ — Occurs when the input graph data is well-structured and maps can be pre-allocated without collisions. We iterate through all vertices ($V$) and edges ($E$) exactly once.
-* **Average Case:** $O(V + E)$ — Since hash map insertion has an average time complexity of $O(1)$, populating the map by processing all nodes and their corresponding adjacencies scales linearly with the map size.
-* **Worst Case:** $O(V^2)$ or $O(V \cdot E)$ — If the underlying hash map encounters extreme hash collisions, lookup and insertion times degrade to linear time $O(N)$ per element instead of $O(1)$.
+* **Best Case:** $\mathcal{O}(E \cdot V)$ — Occurs when inserting edges where both vertex endpoints ($id_1$ and $id_2$)already exist in the graph array at the very firt indices. For each of the $E$ street segments, `buscar_o_insertar_nodo` scans the existing node array up to &V& vertices.
+* **Average Case:** $\mathcal{O}(E \cdot V)$ — As the graph builds up linearly using sequential array scans to ensure node uniqueness, inserting each edge requires iterating over a dynamically growing list of unique vertices ($V$).
+* **Worst Case:** $\mathcal{O}(E \cdot V + V \cdot \text{realloc})$ — Occurs when every single edge introduces brand new nodes. The function must scan the entire vertex list of size $V$ for every street segment, combined with the structural overhead of calling `realloc` to scale the internal heap allocations.
 
 ### 1.2 Finding Coordinates by Street/Place Name
-* **Best Case:** $O(1)$ — Occurs when the requested street or place name is located at the very beginning of the data structure, or hits the exact target immediately in a perfectly balanced lookup structure.
-* **Average Case:** $O(N \cdot L)$ — If implemented sequentially, we must traverse $N$ elements where $L$ is the string length evaluated by the Levenshtein Distance algorithm. If a hash map is used, it resolves to $O(L)$ to hash the key.
-* **Worst Case:** $O(N \cdot L)$ — In a sequential scan, the target element is at the end of the list or does not exist, forcing a complete traversal of all $N$ names while computing the string edit distance costs for each.
+* **Best Case:** $\mathcal{O}(N \cdot L)$ — Even if the user inputs an exact name match at the beginning of the list, the system is designed to perform a complete linear scan of all $N$ elements in the linked list(`House`or `Place`) to find multiple potentialmatches and to compute the minimum `distancia_levenshtein`(where $L$ represents the string length boundaries).
+* **Average Case:** $\mathcal{O}(N \cdot L_1 \cdot L_2)$ — The system iterates sequentially over all $N$ loaded entities in the linked list. For every entry, it computes the Levenshtein distante matrix, which depends heavily on the lenghts of both strings ($L_1 \cdot L_2$).
+* **Worst Case:** $\mathcal{O}(N \cdot L_1 \cdot L_2)$ — Matches the average case since it is a hard-coded sequential traversal across the entire linked list allocation; it cannot short-circuit because it must always search for the overall minimum distance.
 
 ### 1.3 Path-Finding Algorithm (BFS)
-* **Best Case:** $O(1)$ — Occurs when the destination street is identical to the origin street, ending the search immediately upon initialization.
-* **Average Case:** $O(V + E)$ — In a standard Breadth-First Search, every reachable vertex ($V$) and edge ($E$) is explored. However, because our implementation checks if a node has been visited using a sequential list look-up, this average case degrades to $O(V^2)$ due to nested linear lookups.
-* **Worst Case:** $O(V^2)$ — Occurs when the destination is unreachable or at the maximum depth of the graph, forcing the algorithm to traverse all elements while executing highly latent sequential scans to manage the `visited` queue.
+* **Best Case:** $\mathcal{O}(V)$ — Occurs when the origin node is identical to the destination node, allowing the outer loop searching for the minimum unvisited distance node to short-circuit or break almost immediately.
+* **Average Case:** $\mathcal{O}(V^2 + E)$ — Since the implementation utilizes an un-indexed sequential array lookup to find the minimum distance vertex in the unvisited set, it takes $\mathcal{O}(V)$ time per extraction. Executing this choice across all $V$ vertices yields $\mathcal{O}(V^2)$ operations, while relaxing the edges scales linearly with $E$.
+* **Worst Case:** $\mathcal{O}(V^2 + E)$ — Occurs when the graph is highly dense or the destination is unreachable, forcing the nested loop logic to fully process all $V$ vertices sequentially alongside all adjacent edge arrays.
 
 ---
 
