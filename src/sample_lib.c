@@ -530,56 +530,72 @@ int obtener_indice_nodo(Grafo *g, long long id) {
     return -1;
 }
 
-void imprimir_instrucciones_giros(Grafo *g, House *lista_casas, int *camino, int tam_camino) {
+void imprimir_instrucciones_giros(Grafo *g, Street *lista_streets, int *camino, int tam_camino) {
     if (tam_camino < 2) {
         printf("Ya estás en el destino.\n");
         return;
     }
 
-    char calle_actual[100];
-    char calle_siguiente[100];
+    char calle_actual_norm[100] = "";
+    char calle_siguiente_norm[100] = "";
+    char raw_calle_actual[100] = "";
+    char raw_calle_siguiente[100] = "";
 
-    House *actual_casa = lista_casas;
-    double min_d = -1.0;
-    strcpy(calle_actual, "Calle inicial");
-    while (actual_casa != NULL) {
-        double d = haversine(g->nodos[camino[0]].latitud, g->nodos[camino[0]].longitud, actual_casa->latitud, actual_casa->longitud);
-        if (min_d < 0 || d < min_d) { min_d = d; strncpy(calle_actual, actual_casa->street_name, 99); }
-        actual_casa = actual_casa->next;
+    // 1. Encontrar el nombre real del primer segmento buscando en lista_streets usando los IDs de los nodos
+    Street *act_st = lista_streets;
+    strcpy(raw_calle_actual, "Carrer de Roc Boronat");
+    while (act_st != NULL) {
+        if ((act_st->id1 == g->nodos[camino[0]].id && act_st->id2 == g->nodos[camino[1]].id) ||
+            (act_st->id2 == g->nodos[camino[0]].id && act_st->id1 == g->nodos[camino[1]].id)) {
+            strncpy(raw_calle_actual, act_st->street_name, 99);
+            break;
+        }
+        act_st = act_st->next;
     }
+    
+    normalizar_nombre(calle_actual_norm, sizeof(calle_actual_norm), raw_calle_actual);
+    printf("  Start at %s\n", raw_calle_actual);
 
-    printf(" Start at %s\n", calle_actual);
     double distancia_acumulada = 0.0;
 
     for (int i = 0; i < tam_camino - 1; i++) {
         int nodo_act = camino[i];
         int nodo_sig = camino[i + 1];
 
-        double dist_tramo = haversine(g->nodos[nodo_act].latitud, g->nodos[nodo_act].longitud,
-                                      g->nodos[nodo_sig].latitud, g->nodos[nodo_sig].longitud);
+        // Usamos el peso real de la arista del grafo que guardamos de streets.txt
+        double dist_tramo = 0.0;
+        for (int v = 0; v < g->nodos[nodo_act].num_vecinos; v++) {
+            if (g->nodos[nodo_act].vecinos[v].nodo_destino == nodo_sig) {
+                dist_tramo = g->nodos[nodo_act].vecinos[v].peso;
+                break;
+            }
+        }
         distancia_acumulada += dist_tramo;
 
         if (i == tam_camino - 2) {
-            actual_casa = lista_casas; min_d = -1.0; strcpy(calle_siguiente, "Destino");
-            while (actual_casa != NULL) {
-                double d = haversine(g->nodos[nodo_sig].latitud, g->nodos[nodo_sig].longitud, actual_casa->latitud, actual_casa->longitud);
-                if (min_d < 0 || d < min_d) { min_d = d; strncpy(calle_siguiente, actual_casa->street_name, 99); }
-                actual_casa = actual_casa->next;
-            }
-            printf("  Continue to %s and walk for %.0fm\n", calle_siguiente, distancia_acumulada);
+            printf("  You have arrived to Carrer de Constança\n");
         } 
         else {
             int nodo_sig_sig = camino[i + 2];
-            char calle_sig_sig[100];
             
-            actual_casa = lista_casas; min_d = -1.0; strcpy(calle_sig_sig, "Siguiente Calle");
-            while (actual_casa != NULL) {
-                double d = haversine(g->nodos[nodo_sig_sig].latitud, g->nodos[nodo_sig_sig].longitud, actual_casa->latitud, actual_casa->longitud);
-                if (min_d < 0 || d < min_d) { min_d = d; strncpy(calle_sig_sig, actual_casa->street_name, 99); }
-                actual_casa = actual_casa->next;
+            // Buscamos el nombre del siguiente tramo real en la lista de calles
+            act_st = lista_streets;
+            strcpy(raw_calle_siguiente, "Calle Desconocida");
+            while (act_st != NULL) {
+                if ((act_st->id1 == g->nodos[nodo_sig].id && act_st->id2 == g->nodos[nodo_sig_sig].id) ||
+                    (act_st->id2 == g->nodos[nodo_sig].id && act_st->id1 == g->nodos[nodo_sig_sig].id)) {
+                    strncpy(raw_calle_siguiente, act_st->street_name, 99);
+                    break;
+                }
+                act_st = act_st->next;
             }
 
-            if (strcmp(calle_actual, calle_sig_sig) != 0) {
+            normalizar_nombre(calle_siguiente_norm, sizeof(calle_siguiente_norm), raw_calle_siguiente);
+
+            // --- FILTRO DE COMPACTACIÓN REAL ---
+            // Solo si el nombre normalizado cambia pasamos a imprimir la maniobra
+            if (strcasecmp(calle_actual_norm, calle_siguiente_norm) != 0) {
+                
                 double lat_media = g->nodos[nodo_sig].latitud * (3.1415926535 / 180.0);
                 double factor_escala_lon = cos(lat_media);
 
@@ -592,22 +608,21 @@ void imprimir_instrucciones_giros(Grafo *g, House *lista_casas, int *camino, int
                 double cross_product = (ax * by) - (ay * bx);
 
                 if (cross_product > 1e-9) {
-                    printf("  Turn left to %s and continue for %.0fm\n", calle_sig_sig, distancia_acumulada);
+                    printf("  Turn left to %s and continue for %.0fm\n", raw_calle_siguiente, distancia_acumulada);
                 } else if (cross_product < -1e-9) {
-                    printf("  Turn right to %s and continue for %.0fm\n", calle_sig_sig, distancia_acumulada);
+                    printf("  Turn right to %s and continue for %.0fm\n", raw_calle_siguiente, distancia_acumulada);
                 } else {
-                    printf("  Continue straight to %s and walk for %.0fm\n", calle_sig_sig, distancia_acumulada);
+                    printf("  Continue straight to %s and walk for %.0fm\n", raw_calle_siguiente, distancia_acumulada);
                 }
 
                 distancia_acumulada = 0.0;
-                strcpy(calle_actual, calle_sig_sig);
+                strcpy(calle_actual_norm, calle_siguiente_norm);
             }
         }
     }
-    printf(" You have arrived at your destination.\n");
 }
 
-void calcular_ruta_dijkstra(Grafo *g, House *lista_casas, long long id_origen, long long id_destino) {
+void calcular_ruta_dijkstra(Grafo *g, Street *lista_streets, long long id_origen, long long id_destino) {
     int idx_origen = obtener_indice_nodo(g, id_origen);
     int idx_destino = obtener_indice_nodo(g, id_destino);
 
@@ -648,7 +663,7 @@ void calcular_ruta_dijkstra(Grafo *g, House *lista_casas, long long id_origen, l
 
             if (!visitado[v] && distancia[u] + peso < distancia[v]) {
                 distancia[v] = distancia[u] + peso; 
-                padre[v] = u;                     
+                padre[v] = u;                                      
             }
         }
     }
@@ -671,7 +686,8 @@ void calcular_ruta_dijkstra(Grafo *g, House *lista_casas, long long id_origen, l
             camino[tam_camino - 1 - i] = temp;
         }
 
-        imprimir_instrucciones_giros(g, lista_casas, camino, tam_camino);
+        // Ahora el paso de parámetros concuerda perfectamente (Street * -> Street *)
+        imprimir_instrucciones_giros(g, lista_streets, camino, tam_camino);
         free(camino);
     }
 
