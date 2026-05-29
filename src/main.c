@@ -15,6 +15,8 @@ int main() {
     Place *lista_lugares = NULL;
     Street *lista_streets = NULL;
     
+    StreetHashMap mi_mapa_hash;
+
     Grafo mi_grafo;
     mi_grafo.nodos = NULL;
     mi_grafo.total_nodos = 0;
@@ -40,7 +42,7 @@ int main() {
 
         lista_casas = cargar_mapa(path_houses, &num_houses);
         lista_lugares = cargar_lugares(path_places, &num_places);
-        lista_streets = cargar_streets(path_streets, &num_streets);
+        lista_streets = cargar_streets_con_hash(path_streets, &num_streets, &mi_mapa_hash);
 
         if (lista_casas == NULL && lista_lugares == NULL && lista_streets == NULL) { 
             printf("Error: Could not load map data for '%s'. Check that the folder exists.\n", map_name);
@@ -81,13 +83,13 @@ int main() {
 
     if (opcion == 1) { 
         buscar_direccion(lista_casas, &lat_origen, &lon_origen); 
-        buscar_coordenada(&mi_grafo, lista_streets, lista_casas, lat_origen, lon_origen);
+        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lista_casas, lat_origen, lon_origen); // <-- Cambiado aquí
     } else if (opcion == 2) { 
         buscar_lugar(lista_lugares, &lat_origen, &lon_origen);
-        buscar_coordenada(&mi_grafo, lista_streets, lista_casas, lat_origen, lon_origen);
+        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lista_casas, lat_origen, lon_origen); // <-- Cambiado aquí
     } else if (opcion == 3) {
         pedir_coordenadas_seguras(&lat_origen, &lon_origen);
-        buscar_coordenada(&mi_grafo, lista_streets, lista_casas, lat_origen, lon_origen);
+        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lista_casas, lat_origen, lon_origen); // <-- Cambiado aquí
     }
 
     // ==========================================
@@ -111,14 +113,14 @@ int main() {
     }
 
     if (opcion == 1) { 
-        buscar_direccion(lista_casas, &lat_destino, &lon_destino);
-        buscar_coordenada(&mi_grafo, lista_streets, lista_casas, lat_destino, lon_destino); 
+        buscar_direccion(lista_casas, &lat_origen, &lon_origen); 
+        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lista_casas, lat_origen, lon_origen); // <--- Llama a funcion.c
     } else if (opcion == 2) { 
-        buscar_lugar(lista_lugares, &lat_destino, &lon_destino);
-        buscar_coordenada(&mi_grafo, lista_streets, lista_casas, lat_destino, lon_destino); 
+        buscar_lugar(lista_lugares, &lat_origen, &lon_origen);
+        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lista_casas, lat_origen, lon_origen); // <--- Llama a funcion.c
     } else if (opcion == 3) {
-        pedir_coordenadas_seguras(&lat_destino, &lon_destino);
-        buscar_coordenada(&mi_grafo, lista_streets, lista_casas, lat_destino, lon_destino); 
+        pedir_coordenadas_seguras(&lat_origen, &lon_origen);
+        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lista_casas, lat_origen, lon_origen); // <--- Llama a funcion.c
     }
 
     // ROUTE
@@ -128,11 +130,14 @@ int main() {
     printf("Closest origin graph node: %lld\n", id_nodo_origen);
     printf("Closest destination graph node: %lld\n\n", id_nodo_destino);
 
-    calcular_ruta_bfs(&mi_grafo, lista_streets, id_nodo_origen, id_nodo_destino);
+    calcular_ruta_bfs(&mi_grafo, &mi_mapa_hash, id_nodo_origen, id_nodo_destino);
 
     if (lista_casas) liberar_lista(lista_casas); 
     if (lista_lugares) liberar_lugares(lista_lugares);
     if (lista_streets) liberar_streets(lista_streets);
+
+    hash_liberar(&mi_mapa_hash);
+    
     liberar_grafo(&mi_grafo); 
 
     return 0;

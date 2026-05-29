@@ -316,13 +316,16 @@ Street* add_street(Street *cabeza, long long id1, double lat1, double lon1, long
     return nueva;
 }
 
-Street* cargar_streets(char *path, int *total) {
+Street* cargar_streets_con_hash(char *path, int *total, StreetHashMap *map) {
     FILE *f = fopen(path, "r");
     if (f == NULL) return NULL;
 
     Street *cabeza = NULL;
     char linea[256];
     *total = 0;
+
+    // Inicializar el mapa a NULLs
+    memset(map, 0, sizeof(StreetHashMap));
 
     while (fgets(linea, sizeof(linea), f)) {
         long long id1, id2;
@@ -332,25 +335,23 @@ Street* cargar_streets(char *path, int *total) {
         
         nombre_calle[0] = '\0'; 
         
-        // Forzamos a leer las 8 columnas estrictas del fichero
         int leidos = sscanf(linea, "%lld,%lf,%lf,%lld,%lf,%lf,%lf,%[^\n]", 
                             &id1, &lat1, &lon1, &id2, &lat2, &lon2, &peso_fichero, nombre_calle);
         
-        // Descartamos cualquier línea corrupta o incompleta que altere el contador
         if (leidos == 8 && strlen(nombre_calle) > 0) {
             Street *nueva = (Street*)malloc(sizeof(Street));
             if (nueva != NULL) {
                 nueva->id1 = id1; nueva->lat1 = lat1; nueva->lon1 = lon1;
                 nueva->id2 = id2; nueva->lat2 = lat2; nueva->lon2 = lon2;
-                
-                // Guardamos el peso original de la columna 7 en mid_lat para Dijkstra
                 nueva->mid_lat = peso_fichero; 
                 nueva->mid_lon = 0.0; 
-                
                 snprintf(nueva->street_name, sizeof(nueva->street_name), "%s", nombre_calle);
                 nueva->next = cabeza;
                 cabeza = nueva;
                 (*total)++;
+
+                // ¡AQUÍ SE INSTANCIA EN LA HASH EN O(1)!
+                hash_insertar(map, id1, id2, nombre_calle);
             }
         }
     }
@@ -545,7 +546,7 @@ void latlon_to_xy(double lat_ref, double lon_ref,
     *y = EARTH_RADIUS_KM * dlat;
 }
 
-void imprimir_instrucciones_giros(Grafo *g, Street *lista_streets, int *camino, int tam_camino) {
+void imprimir_instrucciones_giros_hash(Grafo *g, StreetHashMap *map, int *camino, int tam_camino) {
     if (tam_camino < 2) {
         printf("Ya estás en el destino.\n");
         return;
@@ -556,16 +557,12 @@ void imprimir_instrucciones_giros(Grafo *g, Street *lista_streets, int *camino, 
     char raw_calle_actual[100] = "";
     char raw_calle_siguiente[100] = "";
 
-    // Encontrar el nombre real del primer segmento
-    Street *act_st = lista_streets;
-    strcpy(raw_calle_actual, "Calle de Inicio");
-    while (act_st != NULL) {
-        if ((act_st->id1 == g->nodos[camino[0]].id && act_st->id2 == g->nodos[camino[1]].id) ||
-            (act_st->id2 == g->nodos[camino[0]].id && act_st->id1 == g->nodos[camino[1]].id)) {
-            strncpy(raw_calle_actual, act_st->street_name, 99);
-            break;
-        }
-        act_st = act_st->next;
+    // 1. Conseguir el nombre de la primera calle en O(1) usando la Hash
+    const char *nombre_hash = hash_buscar(map, g->nodos[camino[0]].id, g->nodos[camino[1]].id);
+    if (nombre_hash != NULL) {
+        strncpy(raw_calle_actual, nombre_hash, 99);
+    } else {
+        strcpy(raw_calle_actual, "Calle de Inicio");
     }
     
     normalizar_nombre(calle_actual_norm, sizeof(calle_actual_norm), raw_calle_actual);
@@ -587,27 +584,22 @@ void imprimir_instrucciones_giros(Grafo *g, Street *lista_streets, int *camino, 
         distancia_acumulada += dist_tramo;
 
         if (i == tam_camino - 2) {
-            printf("  You have arrived to %s\n", raw_calle_actual);
+            printf("  You have arrived to %s and continue for %.0fm\n", raw_calle_actual, distancia_acumulada);
         } 
         else {
             int nodo_sig_sig = camino[i + 2];
             
-            act_st = lista_streets;
-            strcpy(raw_calle_siguiente, "Calle Desconocida");
-            while (act_st != NULL) {
-                if ((act_st->id1 == g->nodos[nodo_sig].id && act_st->id2 == g->nodos[nodo_sig_sig].id) ||
-                    (act_st->id2 == g->nodos[nodo_sig].id && act_st->id1 == g->nodos[nodo_sig_sig].id)) {
-                    strncpy(raw_calle_siguiente, act_st->street_name, 99);
-                    break;
-                }
-                act_st = act_st->next;
+            // 2. Conseguir el nombre de la siguiente calle en O(1) usando la Hash
+            const char *nombre_sig_hash = hash_buscar(map, g->nodos[nodo_sig].id, g->nodos[nodo_sig_sig].id);
+            if (nombre_sig_hash != NULL) {
+                strncpy(raw_calle_siguiente, nombre_sig_hash, 99);
+            } else {
+                strcpy(raw_calle_siguiente, "Calle Desconocida");
             }
 
             normalizar_nombre(calle_siguiente_norm, sizeof(calle_siguiente_norm), raw_calle_siguiente);
 
             if (strcasecmp(calle_actual_norm, calle_siguiente_norm) != 0) {
-                
-                // LÓGICA DEL ENUNCIADO: Conversión latlon_to_xy y Producto Cruzado
                 double Ax, Ay, Bx, By, Cx, Cy;
                 double lat_ref = g->nodos[nodo_act].latitud;
                 double lon_ref = g->nodos[nodo_act].longitud;
@@ -616,7 +608,6 @@ void imprimir_instrucciones_giros(Grafo *g, Street *lista_streets, int *camino, 
                 latlon_to_xy(lat_ref, lon_ref, g->nodos[nodo_sig].latitud, g->nodos[nodo_sig].longitud, &Bx, &By);
                 latlon_to_xy(lat_ref, lon_ref, g->nodos[nodo_sig_sig].latitud, g->nodos[nodo_sig_sig].longitud, &Cx, &Cy);
 
-                // AB x BC = (Bx-Ax)*(Cy-By) - (By-Ay)*(Cx-Bx)
                 double cross_product = (Bx - Ax) * (Cy - By) - (By - Ay) * (Cx - Bx);
 
                 if (cross_product > 1e-6) {
@@ -627,7 +618,7 @@ void imprimir_instrucciones_giros(Grafo *g, Street *lista_streets, int *camino, 
                     printf("  Continue straight to %s and walk for %.0fm\n", raw_calle_siguiente, distancia_acumulada);
                 }
 
-                distancia_acumulada = 0.0;
+                distancia_acumulada = 0.0; // Reseteamos contador para la nueva calle
                 strcpy(raw_calle_actual, raw_calle_siguiente);
                 strcpy(calle_actual_norm, calle_siguiente_norm);
             }
@@ -700,7 +691,7 @@ void calcular_ruta_dijkstra(Grafo *g, Street *lista_streets, long long id_origen
         }
 
         // Ahora el paso de parámetros concuerda perfectamente (Street * -> Street *)
-        imprimir_instrucciones_giros(g, lista_streets, camino, tam_camino);
+        imprimir_instrucciones_giros_hash(g, NULL, camino, tam_camino);
         free(camino);
     }
 
@@ -913,7 +904,7 @@ void dequeue(Queue *q, int **path_out, int *len_out) {
 // ALGORITMO BFS FIEL AL PSEUDOCÓDIGO DEL ENUNCIADO
 // ==========================================
 
-void calcular_ruta_bfs(Grafo *g, Street *lista_streets, long long id_origen, long long id_destino) {
+void calcular_ruta_bfs(Grafo *g, StreetHashMap *map, long long id_origen, long long id_destino) {
     int idx_origen = obtener_indice_nodo(g, id_origen);
     int idx_destino = obtener_indice_nodo(g, id_destino);
 
@@ -986,7 +977,7 @@ void calcular_ruta_bfs(Grafo *g, Street *lista_streets, long long id_origen, lon
     // Imprimimos la ruta si "return NULL" no ocurrió
     if (mejor_camino != NULL) {
         printf("\n--- ROUTE ---\n");
-        imprimir_instrucciones_giros(g, lista_streets, mejor_camino, mejor_tam);
+        imprimir_instrucciones_giros_hash(g, map, mejor_camino, mejor_tam);
         free(mejor_camino);
     } else {
         printf("No existe una ruta transitable entre los dos puntos seleccionados.\n");
@@ -1001,4 +992,65 @@ void calcular_ruta_bfs(Grafo *g, Street *lista_streets, long long id_origen, lon
     }
 
     free(visitado);
+}
+
+// Función Hash de multiplicación/conmutativa simple para dos IDs de 64 bits
+unsigned int calcular_hash(long long id1, long long id2) {
+    // Ordenamos para que el hash sea bidireccional (id_menor, id_mayor)
+    long long menor = (id1 < id2) ? id1 : id2;
+    long long mayor = (id1 < id2) ? id2 : id1;
+    
+    unsigned long long h = 1125899906842597ULL; // Primo grande
+    h = h * 31 + menor;
+    h = h * 31 + mayor;
+    
+    return (unsigned int)(h % HASH_SIZE);
+}
+
+// Insertar una calle en la tabla hash
+void hash_insertar(StreetHashMap *map, long long id1, long long id2, const char *name) {
+    unsigned int index = calcular_hash(id1, id2);
+    
+    HashNode *nuevo = (HashNode *)malloc(sizeof(HashNode));
+    nuevo->id1 = id1;
+    nuevo->id2 = id2;
+    strncpy(nuevo->street_name, name, 99);
+    nuevo->street_name[99] = '\0';
+    
+    // Insertar al inicio del bucket (Encadenamiento)
+    nuevo->next = map->buckets[index];
+    map->buckets[index] = nuevo;
+}
+
+// Buscar el nombre de una calle en O(1)
+const char* hash_buscar(StreetHashMap *map, long long id1, long long id2) {
+    unsigned int index = calcular_hash(id1, id2);
+    HashNode *actual = map->buckets[index];
+    
+    long long menor = (id1 < id2) ? id1 : id2;
+    long long mayor = (id1 < id2) ? id2 : id1;
+    
+    while (actual != NULL) {
+        long long act_menor = (actual->id1 < actual->id2) ? actual->id1 : actual->id2;
+        long long act_mayor = (actual->id1 < actual->id2) ? actual->id2 : actual->id1;
+        
+        if (act_menor == menor && act_mayor == mayor) {
+            return actual->street_name;
+        }
+        actual = actual->next;
+    }
+    return NULL; // No encontrado
+}
+
+// Liberar la memoria de la tabla hash al finalizar el programa
+void hash_liberar(StreetHashMap *map) {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        HashNode *actual = map->buckets[i];
+        while (actual != NULL) {
+            HashNode *temp = actual;
+            actual = actual->next;
+            free(temp);
+        }
+        map->buckets[i] = NULL;
+    }
 }
