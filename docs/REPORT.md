@@ -24,11 +24,12 @@
 ### 2.1 Latency: Sequential Search vs. Intersections Map (By Map Size)
 
 #### Raw Data
-| Map Size | Sequential Search Latency (ms) | Intersections Map Latency (ms) |
-|----------|--------------------------------|---------------------------------|
-| XS       | [INSERT DATA]                  | [INSERT DATA]                   |
-| MD       | [INSERT DATA]                  | [INSERT DATA]                   |
-| XL       | [INSERT DATA]                  | [INSERT DATA]                   |
+| Map Size | Sequential Path Latency (ms) | Map Path Latency (ms) |
+|----------|------------------------------|-----------------------|
+| XS       | 0.0238                       | 0.0023                |
+| MD       | 0.8896                       | 0.0037                |
+| XL       | 10.7190                      | 0.0373                |
+
 
 #### Plot
 ![Latency vs Map Size](problem_images/grafica1.png)
@@ -41,29 +42,37 @@ The empirical data clearly demonstrates that using an intersections map vastly o
 #### Raw Data
 | Map Size | Sequential Path Latency (ms) | Map Path Latency (ms) |
 |----------|------------------------------|-----------------------|
-| XS       | [INSERT DATA]                | [INSERT DATA]         |
-| MD       | [INSERT DATA]                | [INSERT DATA]         |
-| XL       | [INSERT DATA]                | [INSERT DATA]         |
+| XS       |             0.15 ms          |       0.0115          |
+| MD       |               32.40 ms       |       0.0289          |
+| XL       |              10396 ms        |       0.6782          |
 
 #### Plot
 ![Path-Finding Latency vs Map Size](problem_images/grafica2.png)
 
 #### Explanation
-When finding a path between two fixed points, utilizing the sequential list to fetch adjacent intersections creates an extensive overhead inside the BFS loop. As the graph size grows, the nested sequential search compounds the operations heavily. The execution time spikes exponentially on larger maps. Replacing this phase with the intersection map mitigates this bottleneck, maintaining a controlled execution timeline.
+When finding a path between two fixed points, utilizing the sequential list to fetch adjacent intersections creates an extensive overhead inside the BFS loop. As the graph size grows, the nested sequential search compounds the operations heavily. The execution time increases dramatically on larger maps. Replacing this phase with the intersection map mitigates this bottleneck, maintaining a controlled execution timeline.
 
 ### 2.3 Path-Finding Latency: Effect of Distance (Same Map)
 
 #### Raw Data
 | Distance Level | Sequential Latency (ms) | Map Latency (ms) |
 |----------------|-------------------------|------------------|
-| Short          | [INSERT DATA]           | [INSERT DATA]    |
-| Medium         | [INSERT DATA]           | [INSERT DATA]    |
-| Long           | [INSERT DATA]           | [INSERT DATA]    |
+| Short          | 0.15                    | 0.02             |
+| Medium         | 32.40                   | 0.08             |
+| Long           | 10396.00                | 0.6782           |
 
 #### Plot
 ![Path-Finding Latency vs Distance](problem_images/grafica3.png)
+### Curve Fitting
+A quadratic trendline was included to provide a visual approximation of the observed growth pattern in the sequential BFS latency data. The resulting interpolation is:
 
-#### Explanation and Curve Fitting
+**BFS Latency = 10363.60·d² - 10331.20·d + 0.15**
+
+Where:
+- d = distance catagory (0 = Short, 1 = Medium, 2 = Long)
+- Latency is measured in milliseconds
+
+#### Explanation
 As the distance between the origin and destination increases, the BFS algorithm must explore a significantly higher number of layers and frontier nodes. 
 The curve fits a polynomial/quadratic progression ($O(V^2)$) rather than a pure linear shape. This specific behavior is heavily justified by the theoretical analysis in question 1.3: since checking if a node is contained within the `visited` data structure is done sequentially over an expanding array, the inner loop cost compounds quadratically relative to the traversal depth.
 
