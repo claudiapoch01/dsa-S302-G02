@@ -358,7 +358,8 @@ Street* cargar_streets(char *path, int *total) {
     return cabeza;
 }
 
-void buscar_coordenada(Street *lista_streets, House *lista_casas, double user_lat, double user_lon) {
+// Versión antigua, del lab 4. 
+void buscar_coordenada_antigua(Street *lista_streets, House *lista_casas, double user_lat, double user_lon) {
     if (lista_streets == NULL) return;
 
     Street *actual = lista_streets;

@@ -66,7 +66,13 @@ void liberar_lista(House *lista);
 double haversine(double lat1, double lon1, double lat2, double lon2);
 Street* add_street(Street *cabeza, long long id1, double lat1, double lon1, long long id2, double lat2, double lon2, char *name);
 Street* cargar_streets(char *path, int *total);
-void buscar_coordenada(Street *lista_streets, House *lista_casas, double user_lat, double user_lon);
+
+// función antigua, del lab 4:
+void buscar_coordenada_antigua(Street *lista_streets, House *lista_casas, double user_lat, double user_lon);
+// nueva función, del lab 5
+// void buscar_coordenada(Grafo *g, Street *lista_streets, double user_lat, double user_lon);
+void buscar_coordenada(Grafo *g, Street *lista_streets, House *lista_casas, double user_lat, double user_lon);
+
 void liberar_streets(Street *lista);
 
 void normalizar_coordenadas_string(char *buffer);
@@ -84,6 +90,6 @@ void liberar_grafo(Grafo *g);
 long long buscar_nodo_mas_cercano(Grafo *g, double lat, double lon); 
 
 int obtener_indice_nodo(Grafo *g, long long id);
-void calcular_ruta_dijkstra(Grafo *g, House *lista_casas, long long origen, long long destino);
+void calcular_ruta_dijkstra(Grafo *g, Street *lista_streets, long long origen, long long destino);
 
 #endif
