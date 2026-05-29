@@ -1,5 +1,6 @@
 #ifndef SAMPLE_LIB_H
 #define SAMPLE_LIB_H
+#define EARTH_RADIUS_KM 6371.0
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,6 +53,23 @@ typedef struct {
     int total_nodos;       
 } Grafo;
 
+typedef struct QueueNode {
+    int *path;             
+    int path_len;
+    struct QueueNode *next;
+} QueueNode;
+
+typedef struct {
+    QueueNode *front;
+    QueueNode *rear;
+} Queue;
+
+typedef struct position {
+  double lat;
+  double lon;
+} Position;
+
+
 int distancia_levenshtein(char *s1, char *s2);
 House* cargar_mapa(char *path, int *total);
 House* add_casa(House *cabeza, char *street, int num, double lat, double lon);
@@ -91,5 +109,10 @@ long long buscar_nodo_mas_cercano(Grafo *g, double lat, double lon);
 
 int obtener_indice_nodo(Grafo *g, long long id);
 void calcular_ruta_dijkstra(Grafo *g, Street *lista_streets, long long origen, long long destino);
+
+double toRadians(double degree);
+void latlon_to_xy(double lat_ref, double lon_ref, double lat, double lon, double *x, double *y);
+
+void calcular_ruta_bfs(Grafo *g, Street *lista_streets, long long id_origen, long long id_destino);
 
 #endif

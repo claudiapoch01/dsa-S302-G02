@@ -128,7 +128,7 @@ int main() {
     printf("Closest origin graph node: %lld\n", id_nodo_origen);
     printf("Closest destination graph node: %lld\n\n", id_nodo_destino);
 
-    calcular_ruta_dijkstra(&mi_grafo, lista_streets, id_nodo_origen, id_nodo_destino);
+    calcular_ruta_bfs(&mi_grafo, lista_streets, id_nodo_origen, id_nodo_destino);
 
     if (lista_casas) liberar_lista(lista_casas); 
     if (lista_lugares) liberar_lugares(lista_lugares);

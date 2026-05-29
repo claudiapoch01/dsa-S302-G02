@@ -531,6 +531,20 @@ int obtener_indice_nodo(Grafo *g, long long id) {
     return -1;
 }
 
+double toRadians(double degree) {
+    return degree * (3.14159265358979323846 / 180.0);
+}
+
+void latlon_to_xy(double lat_ref, double lon_ref,
+                  double lat, double lon,
+                  double *x, double *y) {
+    double lat_ref_rad = toRadians(lat_ref);
+    double dlat = toRadians(lat - lat_ref);
+    double dlon = toRadians(lon - lon_ref);
+    *x = EARTH_RADIUS_KM * dlon * cos(lat_ref_rad);
+    *y = EARTH_RADIUS_KM * dlat;
+}
+
 void imprimir_instrucciones_giros(Grafo *g, Street *lista_streets, int *camino, int tam_camino) {
     if (tam_camino < 2) {
         printf("Ya estás en el destino.\n");
@@ -542,9 +556,9 @@ void imprimir_instrucciones_giros(Grafo *g, Street *lista_streets, int *camino, 
     char raw_calle_actual[100] = "";
     char raw_calle_siguiente[100] = "";
 
-    // 1. Encontrar el nombre real del primer segmento buscando en lista_streets usando los IDs de los nodos
+    // Encontrar el nombre real del primer segmento
     Street *act_st = lista_streets;
-    strcpy(raw_calle_actual, "Carrer de Roc Boronat");
+    strcpy(raw_calle_actual, "Calle de Inicio");
     while (act_st != NULL) {
         if ((act_st->id1 == g->nodos[camino[0]].id && act_st->id2 == g->nodos[camino[1]].id) ||
             (act_st->id2 == g->nodos[camino[0]].id && act_st->id1 == g->nodos[camino[1]].id)) {
@@ -563,7 +577,6 @@ void imprimir_instrucciones_giros(Grafo *g, Street *lista_streets, int *camino, 
         int nodo_act = camino[i];
         int nodo_sig = camino[i + 1];
 
-        // Usamos el peso real de la arista del grafo que guardamos de streets.txt
         double dist_tramo = 0.0;
         for (int v = 0; v < g->nodos[nodo_act].num_vecinos; v++) {
             if (g->nodos[nodo_act].vecinos[v].nodo_destino == nodo_sig) {
@@ -574,12 +587,11 @@ void imprimir_instrucciones_giros(Grafo *g, Street *lista_streets, int *camino, 
         distancia_acumulada += dist_tramo;
 
         if (i == tam_camino - 2) {
-            printf("  You have arrived to Carrer de Constança\n");
+            printf("  You have arrived to %s\n", raw_calle_actual);
         } 
         else {
             int nodo_sig_sig = camino[i + 2];
             
-            // Buscamos el nombre del siguiente tramo real en la lista de calles
             act_st = lista_streets;
             strcpy(raw_calle_siguiente, "Calle Desconocida");
             while (act_st != NULL) {
@@ -593,30 +605,30 @@ void imprimir_instrucciones_giros(Grafo *g, Street *lista_streets, int *camino, 
 
             normalizar_nombre(calle_siguiente_norm, sizeof(calle_siguiente_norm), raw_calle_siguiente);
 
-            // --- FILTRO DE COMPACTACIÓN REAL ---
-            // Solo si el nombre normalizado cambia pasamos a imprimir la maniobra
             if (strcasecmp(calle_actual_norm, calle_siguiente_norm) != 0) {
                 
-                double lat_media = g->nodos[nodo_sig].latitud * (3.1415926535 / 180.0);
-                double factor_escala_lon = cos(lat_media);
+                // LÓGICA DEL ENUNCIADO: Conversión latlon_to_xy y Producto Cruzado
+                double Ax, Ay, Bx, By, Cx, Cy;
+                double lat_ref = g->nodos[nodo_act].latitud;
+                double lon_ref = g->nodos[nodo_act].longitud;
 
-                double ax = (g->nodos[nodo_sig].longitud - g->nodos[nodo_act].longitud) * factor_escala_lon;
-                double ay = g->nodos[nodo_sig].latitud - g->nodos[nodo_act].latitud;
-                
-                double bx = (g->nodos[nodo_sig_sig].longitud - g->nodos[nodo_sig].longitud) * factor_escala_lon;
-                double by = g->nodos[nodo_sig_sig].latitud - g->nodos[nodo_sig].latitud;
+                latlon_to_xy(lat_ref, lon_ref, g->nodos[nodo_act].latitud, g->nodos[nodo_act].longitud, &Ax, &Ay);
+                latlon_to_xy(lat_ref, lon_ref, g->nodos[nodo_sig].latitud, g->nodos[nodo_sig].longitud, &Bx, &By);
+                latlon_to_xy(lat_ref, lon_ref, g->nodos[nodo_sig_sig].latitud, g->nodos[nodo_sig_sig].longitud, &Cx, &Cy);
 
-                double cross_product = (ax * by) - (ay * bx);
+                // AB x BC = (Bx-Ax)*(Cy-By) - (By-Ay)*(Cx-Bx)
+                double cross_product = (Bx - Ax) * (Cy - By) - (By - Ay) * (Cx - Bx);
 
-                if (cross_product > 1e-9) {
+                if (cross_product > 1e-6) {
                     printf("  Turn left to %s and continue for %.0fm\n", raw_calle_siguiente, distancia_acumulada);
-                } else if (cross_product < -1e-9) {
+                } else if (cross_product < -1e-6) {
                     printf("  Turn right to %s and continue for %.0fm\n", raw_calle_siguiente, distancia_acumulada);
                 } else {
                     printf("  Continue straight to %s and walk for %.0fm\n", raw_calle_siguiente, distancia_acumulada);
                 }
 
                 distancia_acumulada = 0.0;
+                strcpy(raw_calle_actual, raw_calle_siguiente);
                 strcpy(calle_actual_norm, calle_siguiente_norm);
             }
         }
@@ -696,6 +708,8 @@ void calcular_ruta_dijkstra(Grafo *g, Street *lista_streets, long long id_origen
     free(visitado);
     free(padre);
 }
+
+
 
 // ==========================================
 // LIBERACIÓN DE MEMORIA Y TEXTOS
@@ -853,4 +867,138 @@ int mapa_valido(const char *m) {
     return strcmp(m, "xs_1") == 0 || strcmp(m, "xs_2") == 0 ||
            strcmp(m, "md_1") == 0 || strcmp(m, "lg_1") == 0 ||
            strcmp(m, "xl_1") == 0 || strcmp(m, "2xl_1") == 0;
+}
+
+void init_queue(Queue *q) {
+    q->front = NULL;
+    q->rear = NULL;
+}
+
+int queue_is_empty(Queue *q) {
+    return (q->front == NULL);
+}
+
+// Encola un camino entero
+void enqueue(Queue *q, int *path_array, int len) {
+    QueueNode *nuevo = (QueueNode *)malloc(sizeof(QueueNode));
+    nuevo->path = (int *)malloc(len * sizeof(int));
+    memcpy(nuevo->path, path_array, len * sizeof(int));
+    nuevo->path_len = len;
+    nuevo->next = NULL;
+    
+    if (queue_is_empty(q)) {
+        q->front = nuevo;
+    } else {
+        q->rear->next = nuevo;
+    }
+    q->rear = nuevo;
+}
+
+// Desencola devolviendo el camino por referencia
+void dequeue(Queue *q, int **path_out, int *len_out) {
+    if (queue_is_empty(q)) return;
+    
+    QueueNode *temp = q->front;
+    *path_out = temp->path;
+    *len_out = temp->path_len;
+    
+    q->front = q->front->next;
+    if (q->front == NULL) {
+        q->rear = NULL;
+    }
+    free(temp);
+}
+
+// ==========================================
+// ALGORITMO BFS FIEL AL PSEUDOCÓDIGO DEL ENUNCIADO
+// ==========================================
+
+void calcular_ruta_bfs(Grafo *g, Street *lista_streets, long long id_origen, long long id_destino) {
+    int idx_origen = obtener_indice_nodo(g, id_origen);
+    int idx_destino = obtener_indice_nodo(g, id_destino);
+
+    if (idx_origen == -1 || idx_destino == -1) {
+        printf("Error: Nodos no encontrados en el grafo.\n");
+        return;
+    }
+
+    // "create a street list [], visited"
+    int *visitado = (int *)calloc(g->total_nodos, sizeof(int));
+
+    // "create an empty queue of street lists, Q"
+    Queue Q;
+    init_queue(&Q);
+
+    // "create a street list [fromStreet], initial_path"
+    int initial_path[1] = {idx_origen};
+    
+    // "enqueue initial_path into Q"
+    enqueue(&Q, initial_path, 1);
+
+    int *mejor_camino = NULL;
+    int mejor_tam = 0;
+
+    // "while Q is not empty:"
+    while (!queue_is_empty(&Q)) {
+        int *path;
+        int len;
+        
+        // "path = dequeue(Q)"
+        dequeue(&Q, &path, &len);
+
+        // "current_street = path[-1]" (El último nodo/calle añadido al camino)
+        int current_node = path[len - 1];
+
+        // "if current_street == toStreet:"
+        if (current_node == idx_destino) {
+            mejor_camino = path; // Guardamos el camino encontrado
+            mejor_tam = len;
+            break; // "return path"
+        }
+
+        // "if current_street not in visited:"
+        if (!visitado[current_node]) {
+            // "add current_street to visited"
+            visitado[current_node] = 1;
+
+            // "for connected_street in intersections_graph[current_street...]:"
+            for (int i = 0; i < g->nodos[current_node].num_vecinos; i++) {
+                int connected_node = g->nodos[current_node].vecinos[i].nodo_destino;
+
+                // "if connected_street not in visited:"
+                if (!visitado[connected_node]) {
+                    // "new_path = path + [connected_street]"
+                    int *new_path = (int *)malloc((len + 1) * sizeof(int));
+                    memcpy(new_path, path, len * sizeof(int));
+                    new_path[len] = connected_node;
+                    
+                    // "enqueue new_path into Q"
+                    enqueue(&Q, new_path, len + 1);
+                    free(new_path);
+                }
+            }
+        }
+        
+        // Liberamos la copia del camino extraída si no es el final
+        free(path); 
+    }
+
+    // Imprimimos la ruta si "return NULL" no ocurrió
+    if (mejor_camino != NULL) {
+        printf("\n--- ROUTE ---\n");
+        imprimir_instrucciones_giros(g, lista_streets, mejor_camino, mejor_tam);
+        free(mejor_camino);
+    } else {
+        printf("No existe una ruta transitable entre los dos puntos seleccionados.\n");
+    }
+
+    // Vaciar la cola en caso de interrupción temprana para no perder memoria
+    while (!queue_is_empty(&Q)) {
+        int *path_res;
+        int len_res;
+        dequeue(&Q, &path_res, &len_res);
+        free(path_res);
+    }
+
+    free(visitado);
 }
