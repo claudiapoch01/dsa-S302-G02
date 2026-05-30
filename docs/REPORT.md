@@ -47,7 +47,7 @@ The empirical data clearly demonstrates that using an intersections map vastly o
 | XL       |              10396 ms        |       0.6782          |
 
 #### Plot
-![Path-Finding Latency vs Map Size](problem_images/grafica2.png)
+![Path-Finding Latency vs Map Size](problem_images/graph2_updated.png)
 
 #### Explanation
 When finding a path between two fixed points, utilizing the sequential list to fetch adjacent intersections creates an extensive overhead inside the BFS loop. As the graph size grows, the nested sequential search compounds the operations heavily. The execution time increases dramatically on larger maps. Replacing this phase with the intersection map mitigates this bottleneck, maintaining a controlled execution timeline.
