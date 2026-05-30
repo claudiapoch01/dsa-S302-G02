@@ -13,9 +13,9 @@
 * **Worst Case:** $\mathcal{O}(N \cdot L_1 \cdot L_2)$ — Matches the average case since it is a hard-coded sequential traversal across the entire linked list allocation; it cannot short-circuit because it must always search for the overall minimum distance.
 
 ### 1.3 Path-Finding Algorithm (BFS)
-* **Best Case:** $\mathcal{O}(V)$ — Occurs when the origin node is identical to the destination node, allowing the outer loop searching for the minimum unvisited distance node to short-circuit or break almost immediately.
-* **Average Case:** $\mathcal{O}(V^2 + E)$ — Since the implementation utilizes an un-indexed sequential array lookup to find the minimum distance vertex in the unvisited set, it takes $\mathcal{O}(V)$ time per extraction. Executing this choice across all $V$ vertices yields $\mathcal{O}(V^2)$ operations, while relaxing the edges scales linearly with $E$.
-* **Worst Case:** $\mathcal{O}(V^2 + E)$ — Occurs when the graph is highly dense or the destination is unreachable, forcing the nested loop logic to fully process all $V$ vertices sequentially alongside all adjacent edge arrays.
+* **Best Case:** $\mathcal{O}(1)$ — Occurs when the origin node is identical to the destination node. The first path extracted from the queue satisfies the destination check immediately, allowing the algorithm to short-circuit and break on the very first iteration without exploring any neighbors.
+* **Average Case:** $\mathcal{O}(V \cdot d + E)$ (where $d$ is the average path depth) — Although checking if a node is already visited takes $\mathcal{O}(1)$ due to a direct-access lookup array (`visitado`), the current architecture suffers from a significant memory allocation overhead. For every explored neighbor, the algorithm duplicates the entire accumulated path using `malloc` and `memcpy`. This forces the execution time to scale with the depth of the traversal layers rather than just the structural size of the graph.
+* **Worst Case:** $\mathcal{O}(V \cdot V + E) \approx \mathcal{O}(V^2 + E)$ — Occurs in highly dense graphs or when the destination is completely unreachable. The algorithm is forced to exhaust the frontier, leading to maximum depth paths being copied repeatedly into memory for every edge relaxation, compounding the operational costs quadratically.
 
 ---
 
@@ -74,19 +74,19 @@ Where:
 
 #### Explanation
 As the distance between the origin and destination increases, the BFS algorithm must explore a significantly higher number of layers and frontier nodes. 
-The curve fits a polynomial/quadratic progression ($O(V^2)$) rather than a pure linear shape. This specific behavior is heavily justified by the theoretical analysis in question 1.3: since checking if a node is contained within the `visited` data structure is done sequentially over an expanding array, the inner loop cost compounds quadratically relative to the traversal depth.
+The curve fits a polynomial/quadratic progression ($\mathcal{O}(V^2)$) rather than a pure linear shape. This specific behavior is heavily justified by the memory mechanics inside the traversal loop: since the algorithm stores paths by allocating new arrays and cloning previous steps (`memcpy(new_path, path, len * sizeof(int))`), the overhead of copying path strings increases sequentially as the exploration goes deeper into the graph. Thus, the deeper the destination, the more expensive every single edge evaluation becomes.
 
 ---
 
 ## 3. Algorithm and Data Structure Improvements
 
-### 3.1 Visited Data Structure in BFS
-* **Proposed Structure:** Hash Set (`HashSet`) or a direct-access Boolean array mapped by node IDs.
-* **Justification:** A look-up on a sequential list requires scanning elements one by one, creating a critical bottleneck inside the main graph traversal loop. A Hash Set replaces this operation with an automated key-hashing routine.
+### 3.1 Memory Representation of Paths in BFS Queue
+* **Proposed Structure:** Parent-Pointer array or tracking index inside the Graph structure instead of full-path copies.
+* **Justification:** Currently, the lookup for visited nodes is already highly optimized via a direct-access boolean array ($\mathcal{O}(1)$). However, the major bottleneck lies in the BFS Queue payload: the code dynamically allocates memory and copies the entire array of historical nodes for every single unvisited neighbor discovery. Replacing this with a single integer array of `parents` (where `parent[v]` stores the node that discovered `v`) completely removes dynamic memory allocation inside the search loop.
 * **Runtime Complexity:**
-  * **Current (with List):** $O(V)$ per lookup check.
-  * **Improved (with Hash Set):** $O(1)$ average lookup check.
-* **Trade-offs / Downsides:** Using a Hash Set introduces minimal memory overhead due to hash bucketing/load factors, alongside a slight CPU cost to calculate the hash function. However, the latency trade-off is massively favorable.
+  * **Current (with Array Cloning):** $\mathcal{O}(V \cdot d + E)$ average due to path array allocations and copies.
+  * **Improved (with Parent Tracking):** $\mathcal{O}(V + E)$ standard linear time for BFS graph operations, executing entirely in place.
+* **Trade-offs / Downsides:** Reconstructing the final route requires a tiny post-processing loop that traverses from the destination back to the origin using the parent pointers. This adds a negligible fraction of a millisecond at the very end but saves millions of allocation cycles during the search phase.
 
 ### 3.2 Finding Street Segment by Latitude and Longitude
 * **Proposed Structure/Algorithm:** K-Dimensional Tree (KD-Tree) or an R-Tree for spatial data indexing.
