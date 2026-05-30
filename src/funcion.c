@@ -1,7 +1,7 @@
 #include "sample_lib.h"
 #include <math.h>
 
-void buscar_coordenada(Grafo *g, StreetHashMap *map, House *lista_casas, double user_lat, double user_lon) {
+void buscar_coordenada(Grafo *g, StreetHashMap *map, double user_lat, double user_lon) {
     if (map == NULL || g == NULL) return;
 
     // 1. Buscamos el nodo más cercano en el grafo para geolocalizar al usuario

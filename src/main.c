@@ -83,13 +83,13 @@ int main() {
 
     if (opcion == 1) { 
         buscar_direccion(lista_casas, &lat_origen, &lon_origen); 
-        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lista_casas, lat_origen, lon_origen); // <-- Cambiado aquí
+        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lat_origen, lon_origen); // <-- Cambiado aquí
     } else if (opcion == 2) { 
         buscar_lugar(lista_lugares, &lat_origen, &lon_origen);
-        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lista_casas, lat_origen, lon_origen); // <-- Cambiado aquí
+        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lat_origen, lon_origen); // <-- Cambiado aquí
     } else if (opcion == 3) {
         pedir_coordenadas_seguras(&lat_origen, &lon_origen);
-        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lista_casas, lat_origen, lon_origen); // <-- Cambiado aquí
+        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lat_origen, lon_origen); // <-- Cambiado aquí
     }
 
     // ==========================================
@@ -114,16 +114,15 @@ int main() {
 
     if (opcion == 1) { 
         buscar_direccion(lista_casas, &lat_origen, &lon_origen); 
-        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lista_casas, lat_origen, lon_origen); // <--- Llama a funcion.c
+        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lat_origen, lon_origen);
     } else if (opcion == 2) { 
         buscar_lugar(lista_lugares, &lat_origen, &lon_origen);
-        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lista_casas, lat_origen, lon_origen); // <--- Llama a funcion.c
+        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lat_origen, lon_origen);
     } else if (opcion == 3) {
         pedir_coordenadas_seguras(&lat_origen, &lon_origen);
-        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lista_casas, lat_origen, lon_origen); // <--- Llama a funcion.c
+        buscar_coordenada(&mi_grafo, &mi_mapa_hash, lat_origen, lon_origen);
     }
 
-    // ROUTE
     long long id_nodo_origen = buscar_nodo_mas_cercano(&mi_grafo, lat_origen, lon_origen);
     long long id_nodo_destino = buscar_nodo_mas_cercano(&mi_grafo, lat_destino, lon_destino);
 

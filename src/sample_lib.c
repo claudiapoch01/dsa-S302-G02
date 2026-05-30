@@ -626,7 +626,7 @@ void imprimir_instrucciones_giros_hash(Grafo *g, StreetHashMap *map, int *camino
     }
 }
 
-void calcular_ruta_dijkstra(Grafo *g, Street *lista_streets, long long id_origen, long long id_destino) {
+void calcular_ruta_dijkstra(Grafo *g, long long id_origen, long long id_destino) {
     int idx_origen = obtener_indice_nodo(g, id_origen);
     int idx_destino = obtener_indice_nodo(g, id_destino);
 

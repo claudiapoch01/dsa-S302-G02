@@ -71,7 +71,7 @@ int main() {
             // HASH
             start = clock();
             for (int i = 0; i < 100; i++) { // Bucle de 100 iteraciones para tener una muestra fiable 
-                buscar_coordenada(&g, &hash_map, houses, lat, lon); // Versión con hash (Lab 5) que busca calles conectadas
+                buscar_coordenada(&g, &hash_map, lat, lon); // Versión con hash (Lab 5) que busca calles conectadas
             }
             end = clock();//tiempo final 
             double hash_avg = timer_ms(start, end) / 100.0; //Calcula el tiempo medio por iteración

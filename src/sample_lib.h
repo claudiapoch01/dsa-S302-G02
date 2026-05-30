@@ -109,7 +109,7 @@ Street* cargar_streets(char *path, int *total);
 // Versión antigua (Lab 4) - Se queda en sample_lib.c de adorno
 void buscar_coordenada_antigua(Street *lista_streets, House *lista_casas, double user_lat, double user_lon);
 // Versión definitiva (Lab 5) - Está en funcion.c y es la que usa el programa
-void buscar_coordenada(Grafo *g, StreetHashMap *map, House *lista_casas, double user_lat, double user_lon);
+void buscar_coordenada(Grafo *g, StreetHashMap *map, double user_lat, double user_lon);
 
 void liberar_streets(Street *lista);
 
@@ -128,7 +128,7 @@ void liberar_grafo(Grafo *g);
 long long buscar_nodo_mas_cercano(Grafo *g, double lat, double lon); 
 
 int obtener_indice_nodo(Grafo *g, long long id);
-void calcular_ruta_dijkstra(Grafo *g, Street *lista_streets, long long origen, long long destino);
+void calcular_ruta_dijkstra(Grafo *g, long long origen, long long destino);
 
 double toRadians(double degree);
 void latlon_to_xy(double lat_ref, double lon_ref, double lat, double lon, double *x, double *y);
