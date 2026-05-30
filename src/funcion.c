@@ -1,10 +1,11 @@
 #include "sample_lib.h"
 #include <math.h>
 
+// funcion para buscar la calle mas cercana y las adyacentes a partir de unas coordenadas
 void buscar_coordenada(Grafo *g, StreetHashMap *map, double user_lat, double user_lon) {
     if (map == NULL || g == NULL) return;
 
-    // 1. Buscamos el nodo más cercano en el grafo para geolocalizar al usuario
+    // buscamos el nodo más cercano a las coordenadas
     long long id_nodo_cercano = buscar_nodo_mas_cercano(g, user_lat, user_lon);
     int idx_nodo = obtener_indice_nodo(g, id_nodo_cercano);
     if (idx_nodo == -1 || g->nodos[idx_nodo].num_vecinos == 0) {
@@ -12,10 +13,9 @@ void buscar_coordenada(Grafo *g, StreetHashMap *map, double user_lat, double use
         return;
     }
 
-    // Identificamos el nombre de la calle y el otro extremo del tramo
+    // cogemos el nombre de la calle más cercano usando hash
     int idx_vecino_original = g->nodos[idx_nodo].vecinos[0].nodo_destino;
     long long id_v = g->nodos[idx_vecino_original].id;
-    
     const char *nombre_calle_actual = hash_buscar(map, id_nodo_cercano, id_v);
     if (nombre_calle_actual == NULL) {
         nombre_calle_actual = hash_buscar(map, id_v, id_nodo_cercano);
@@ -24,7 +24,7 @@ void buscar_coordenada(Grafo *g, StreetHashMap *map, double user_lat, double use
         nombre_calle_actual = "Calle desconocida";
     }
 
-    // 2. Imprimimos los datos del tramo
+    // imprimimos los datos encontrados
     printf("\n    Found at (%lf, %lf)\n", user_lat, user_lon);
     printf("    Closest street: %s\n", nombre_calle_actual);
     printf("    Between %lld (%lf, %lf) and %lld (%lf, %lf)\n", 
@@ -38,7 +38,7 @@ void buscar_coordenada(Grafo *g, StreetHashMap *map, double user_lat, double use
     char calles_sugeridas[30][100]; 
     int num_sugeridas = 0;
 
-    // ¡EVOLUCIÓN: Exploramos AMBOS extremos del segmento de calle!
+    // buscamos los vecinos de ambos lados del nodo
     int nodos_a_explorar[2] = {idx_nodo, idx_vecino_original};
 
     for (int i = 0; i < 2; i++) {
@@ -75,7 +75,7 @@ void buscar_coordenada(Grafo *g, StreetHashMap *map, double user_lat, double use
         }
     }
     
-    if (num_sugeridas == 0) {
+    if (num_sugeridas == 0) { // si no se encuentran calles vecinas, printamos un mensaje
         printf("         - No distinct connecting streets found.\n");
     }
     printf("\n");
