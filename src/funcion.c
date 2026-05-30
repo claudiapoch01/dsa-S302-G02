@@ -12,15 +12,14 @@ void buscar_coordenada(Grafo *g, StreetHashMap *map, double user_lat, double use
         return;
     }
 
-    // Identificamos el nombre de la calle usando el mapa hash en O(1)
-    int idx_vecino = g->nodos[idx_nodo].vecinos[0].nodo_destino;
-    long long id_v = g->nodos[idx_vecino].id;
+    // Identificamos el nombre de la calle y el otro extremo del tramo
+    int idx_vecino_original = g->nodos[idx_nodo].vecinos[0].nodo_destino;
+    long long id_v = g->nodos[idx_vecino_original].id;
+    
     const char *nombre_calle_actual = hash_buscar(map, id_nodo_cercano, id_v);
-
     if (nombre_calle_actual == NULL) {
         nombre_calle_actual = hash_buscar(map, id_v, id_nodo_cercano);
     }
-
     if (nombre_calle_actual == NULL) {
         nombre_calle_actual = "Calle desconocida";
     }
@@ -30,7 +29,7 @@ void buscar_coordenada(Grafo *g, StreetHashMap *map, double user_lat, double use
     printf("    Closest street: %s\n", nombre_calle_actual);
     printf("    Between %lld (%lf, %lf) and %lld (%lf, %lf)\n", 
            id_nodo_cercano, g->nodos[idx_nodo].latitud, g->nodos[idx_nodo].longitud, 
-           id_v, g->nodos[idx_vecino].latitud, g->nodos[idx_vecino].longitud);
+           id_v, g->nodos[idx_vecino_original].latitud, g->nodos[idx_vecino_original].longitud);
 
     printf("\n    From this street segment, you can go to:\n");
     printf("    - %s\n", nombre_calle_actual);
@@ -39,31 +38,39 @@ void buscar_coordenada(Grafo *g, StreetHashMap *map, double user_lat, double use
     char calles_sugeridas[30][100]; 
     int num_sugeridas = 0;
 
-    // ¡MÁXIMA EVOLUCIÓN O(1)! Buscamos las calles conectadas directamente
-    for (int v = 0; v < g->nodos[idx_nodo].num_vecinos; v++) {
-        int idx_destino = g->nodos[idx_nodo].vecinos[v].nodo_destino;
-        long long id_destino = g->nodos[idx_destino].id;
+    // ¡EVOLUCIÓN: Exploramos AMBOS extremos del segmento de calle!
+    int nodos_a_explorar[2] = {idx_nodo, idx_vecino_original};
 
-        // Recuperamos el nombre de la calle vecina instantáneamente desde la Hash
-        const char *nombre_vecino = hash_buscar(map, id_nodo_cercano, id_destino);
-        if (nombre_vecino == NULL) { 
-    nombre_vecino = hash_buscar(map, id_destino, id_nodo_cercano); 
-        }
-        if (nombre_vecino == NULL) continue; // solo si las dos busquedas fallan hace continue 
+    for (int i = 0; i < 2; i++) {
+        int idx_actual_explorando = nodos_a_explorar[i];
+        long long id_actual_explorando = g->nodos[idx_actual_explorando].id;
 
-        if (strcasecmp(nombre_calle_actual, nombre_vecino) != 0) {
-            int ya_existe = 0;
-            for (int k = 0; k < num_sugeridas; k++) {
-                if (strcasecmp(calles_sugeridas[k], nombre_vecino) == 0) {
-                    ya_existe = 1;
-                    break;
-                }
+        for (int v = 0; v < g->nodos[idx_actual_explorando].num_vecinos; v++) {
+            int idx_destino = g->nodos[idx_actual_explorando].vecinos[v].nodo_destino;
+            long long id_destino = g->nodos[idx_destino].id;
+
+            // Recuperamos el nombre de la calle vecina
+            const char *nombre_vecino = hash_buscar(map, id_actual_explorando, id_destino);
+            if (nombre_vecino == NULL) { 
+                nombre_vecino = hash_buscar(map, id_destino, id_actual_explorando); 
             }
+            if (nombre_vecino == NULL) continue; 
 
-            if (!ya_existe && num_sugeridas < 30) {
-                strcpy(calles_sugeridas[num_sugeridas], nombre_vecino);
-                num_sugeridas++;
-                printf("         - %s\n", nombre_vecino);
+            // Si es una calle distinta a la nuestra, la guardamos
+            if (strcasecmp(nombre_calle_actual, nombre_vecino) != 0) {
+                int ya_existe = 0;
+                for (int k = 0; k < num_sugeridas; k++) {
+                    if (strcasecmp(calles_sugeridas[k], nombre_vecino) == 0) {
+                        ya_existe = 1;
+                        break;
+                    }
+                }
+
+                if (!ya_existe && num_sugeridas < 30) {
+                    strcpy(calles_sugeridas[num_sugeridas], nombre_vecino);
+                    num_sugeridas++;
+                    printf("         - %s\n", nombre_vecino);
+                }
             }
         }
     }

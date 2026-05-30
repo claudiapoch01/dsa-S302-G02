@@ -584,8 +584,8 @@ void imprimir_instrucciones_giros_hash(Grafo *g, StreetHashMap *map, int *camino
         distancia_acumulada += dist_tramo;
 
         if (i == tam_camino - 2) {
-            printf("  You have arrived to %s and continue for %.0fm\n", raw_calle_actual, distancia_acumulada);
-        } 
+            printf("  Continue straight for %.0fm and you will arrive at your destination.\n", distancia_acumulada);
+        }
         else {
             int nodo_sig_sig = camino[i + 2];
             
