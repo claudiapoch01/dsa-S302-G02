@@ -18,6 +18,10 @@ void buscar_coordenada(Grafo *g, StreetHashMap *map, House *lista_casas, double 
     const char *nombre_calle_actual = hash_buscar(map, id_nodo_cercano, id_v);
 
     if (nombre_calle_actual == NULL) {
+        nombre_calle_actual = hash_buscar(map, id_v, id_nodo_cercano);
+    }
+
+    if (nombre_calle_actual == NULL) {
         nombre_calle_actual = "Calle desconocida";
     }
 
@@ -42,7 +46,10 @@ void buscar_coordenada(Grafo *g, StreetHashMap *map, House *lista_casas, double 
 
         // Recuperamos el nombre de la calle vecina instantáneamente desde la Hash
         const char *nombre_vecino = hash_buscar(map, id_nodo_cercano, id_destino);
-        if (nombre_vecino == NULL) continue;
+        if (nombre_vecino == NULL) { 
+    nombre_vecino = hash_buscar(map, id_destino, id_nodo_cercano); 
+        }
+        if (nombre_vecino == NULL) continue; // solo si las dos busquedas fallan hace continue 
 
         if (strcasecmp(nombre_calle_actual, nombre_vecino) != 0) {
             int ya_existe = 0;
