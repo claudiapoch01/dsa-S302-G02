@@ -16,7 +16,7 @@ void restaurar() {
     stdout = original_stdout;
 }
 
-double timer_ms(clock_t start, clock_t end) { // devuelve el tiempo en milisesgundos 
+double timer_ms(clock_t start, clock_t end) { // Devuelve el tiempo en milisesgundos 
     return (double)(end - start) * 1000.0 / CLOCKS_PER_SEC;
 }
 
@@ -29,19 +29,19 @@ int main() {
     for (int m = 0; m < 3; m++) { // Bucle que recorre los 3 mapas (XS, MD, XL)
         printf("--- Map: %s (%s) ---\n", mapes[m], noms[m]);
         
-        char path_houses[150], path_places[150], path_streets[150]; // rutas de los archivos de cada mapa
+        char path_houses[150], path_places[150], path_streets[150]; // Rutas de los archivos de cada mapa
         // Construye las rutas correctas a los archivos
         sprintf(path_houses, "../maps/%s/houses.txt", mapes[m]);
         sprintf(path_places, "../maps/%s/places.txt", mapes[m]);
         sprintf(path_streets, "../maps/%s/streets.txt", mapes[m]);
         
-        int num_houses = 0, num_places = 0, num_streets = 0; //contadores de las cargas 
+        int num_houses = 0, num_places = 0, num_streets = 0; // Contadores de las cargas 
         House *houses = cargar_mapa(path_houses, &num_houses);
         Place *places = cargar_lugares(path_places, &num_places);
         
         StreetHashMap hash_map; // Declara la estructura de la tabla hash para guardar nombres de calles
         memset(&hash_map, 0, sizeof(StreetHashMap)); // Inicializa las tablas hash a 0
-        Street *streets = cargar_streets_con_hash(path_streets, &num_streets, &hash_map); //Carga las calles y contruye las tabla hash 
+        Street *streets = cargar_streets_con_hash(path_streets, &num_streets, &hash_map); // Carga las calles y contruye las tabla hash 
         
         if (!streets) {
             printf("  ERROR: No s'ha pogut carregar %s\n\n", mapes[m]);
@@ -64,7 +64,7 @@ int main() {
             for (int i = 0; i < 100; i++) { // Bucle de 100 iteraciones para tener una muestra fiable 
                 buscar_coordenada_antigua(streets, houses, lat, lon); // Versión del lab4 que busca calles conectadas
             }
-            clock_t end = clock(); // tiempo final 
+            clock_t end = clock(); // Tiempo final 
             double seq_avg = timer_ms(start, end) / 100.0; // Calcula el tiempo medio por iteración
             
             // HASH
@@ -72,34 +72,34 @@ int main() {
             for (int i = 0; i < 100; i++) { // Bucle de 100 iteraciones para tener una muestra fiable 
                 buscar_coordenada(&g, &hash_map, lat, lon); // Versión con hash (Lab 5) que busca calles conectadas
             }
-            end = clock();//tiempo final 
-            double hash_avg = timer_ms(start, end) / 100.0; //Calcula el tiempo medio por iteración
+            end = clock(); // Tiempo final 
+            double hash_avg = timer_ms(start, end) / 100.0; // Calcula el tiempo medio por iteración
             
             // Restaurar sortida per imprimir resultats
             restaurar();
             
-            printf("  Cerca seqüencial: %.4f ms\n", seq_avg); // latencia sequencial 
-            printf("  Cerca hash:       %.4f ms\n", hash_avg); //latencia hash 
-            printf("  Speedup:          %.2fx\n", seq_avg / hash_avg); // acceleració
+            printf("  Cerca seqüencial: %.4f ms\n", seq_avg); // Latencia secuencial 
+            printf("  Cerca hash:       %.4f ms\n", hash_avg); // Latencia hash 
+            printf("  Speedup:          %.2fx\n", seq_avg / hash_avg); // Aceleración
             
             // BFS
-            if (g.total_nodos >= 2) { // comprueba que almenos haya 2 nodos para poder hacer el bfs
+            if (g.total_nodos >= 2) { // Comprueba que almenos haya 2 nodos para poder hacer el bfs
                 long long src = g.nodos[0].id; // ID del primer nodo como origen
                 long long dst = g.nodos[g.total_nodos - 1].id; // ID del ultimo nodo como destino
                 
                 silenciar();
-                start = clock(); // tiempo incial
+                start = clock(); // Tiempo incial
                 for (int i = 0; i < 50; i++) {
                     calcular_ruta_bfs(&g, &hash_map, src, dst);
                 }
-                end = clock(); //tiempo final 
-                double bfs_avg = timer_ms(start, end) / 50.0; //Calcula el tiempo medio por BFS 
+                end = clock(); // Tiempo final 
+                double bfs_avg = timer_ms(start, end) / 50.0; // Calcula el tiempo medio por BFS 
                 restaurar();
                 
                 printf("  BFS:             %.4f ms\n", bfs_avg);
             }
         }
-        //liberamos memorias 
+        // Liberamos memorias 
         if (houses) liberar_lista(houses);
         if (places) liberar_lugares(places);
         if (streets) liberar_streets(streets);

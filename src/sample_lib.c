@@ -2,16 +2,16 @@
 #include <math.h>
 #include <float.h>
 
-//funciones auxiliares
 
-int minimo(int a, int b, int c) { // devuelve el mínimo de 3 números
+// Funciones auxiliares
+int minimo(int a, int b, int c) { // Devuelve el mínimo de 3 números
     int m = a;
     if (b < m) m = b;
     if (c < m) m = c;
     return m;
 }
 
-int distancia_levenshtein(char *s1, char *s2) { //calcula la distancia de Levenshtein
+int distancia_levenshtein(char *s1, char *s2) { // Calcula la distancia de Levenshtein
     int len1 = strlen(s1);
     int len2 = strlen(s2);
 
@@ -36,9 +36,9 @@ int distancia_levenshtein(char *s1, char *s2) { //calcula la distancia de Levens
 }
 
 
-// funciones para la gestión de casas
+// Funciones para la gestión de casas
 
-House* add_casa(House *cabeza, char *street, int num, double lat, double lon) { // añade una casa a la lista enlazada de casas
+House* add_casa(House *cabeza, char *street, int num, double lat, double lon) { // Añade una casa a la lista enlazada de casas
     House *nueva = (House*)malloc(sizeof(House));
     if (nueva == NULL) return cabeza;
 
@@ -50,7 +50,7 @@ House* add_casa(House *cabeza, char *street, int num, double lat, double lon) { 
     return nueva;
 }
 
-House* cargar_mapa(char *path, int *total) { // carga las casas desde el archivo
+House* cargar_mapa(char *path, int *total) { // Carga las casas desde el archivo
     FILE *f = fopen(path, "r"); 
     if (f == NULL) { 
         printf("No se ha podido abrir el archivo: %s\n", path);
@@ -78,7 +78,7 @@ House* cargar_mapa(char *path, int *total) { // carga las casas desde el archivo
     return cabeza;
 }
 
-void buscar_direccion(House *lista, double *res_lat, double *res_lon) { // busca una dirección en la lista de casas y devuelve coordenadas
+void buscar_direccion(House *lista, double *res_lat, double *res_lon) { // Busca una dirección en la lista de casas y devuelve coordenadas
     char raw_name[100], street_search[100];
     int num_search;
 
@@ -87,7 +87,7 @@ void buscar_direccion(House *lista, double *res_lat, double *res_lon) { // busca
     normalizar_nombre(street_search, sizeof(street_search), raw_name); 
 
     printf("Enter street number: ");
-    while (scanf("%d", &num_search) != 1) { // si el valor no es un número, pide que se introduzca de nuevo
+    while (scanf("%d", &num_search) != 1) { // Si el valor no es un número, pide que se introduzca de nuevo
         printf("Invalid input. Please enter a numeric value: ");
         int c; while ((c = getchar()) != '\n'); 
     }
@@ -99,7 +99,7 @@ void buscar_direccion(House *lista, double *res_lat, double *res_lon) { // busca
     int min_dist = 100;
     int calle_exacta_encontrada = 0;
 
-    while (actual != NULL) { // buscamos la casa que coincida con el nombre y num
+    while (actual != NULL) { // Buscamos la casa que coincida con el nombre y num
         if (strcasecmp(actual->street_name, street_search) == 0) { 
             calle_exacta_encontrada = 1;
             if (actual->house_number == num_search) { 
@@ -116,7 +116,7 @@ void buscar_direccion(House *lista, double *res_lat, double *res_lon) { // busca
         actual = actual->next;
     }
 
-    if (!casa_elegida && calle_exacta_encontrada) { //si no encuentra el numero, lo vuelve a pedir mostrando los posibles números de esa calle
+    if (!casa_elegida && calle_exacta_encontrada) { // Si no encuentra el numero, lo vuelve a pedir mostrando los posibles números de esa calle
         printf("Invalid number. Valid numbers in %s: ", street_search);
         actual = lista;
         while (actual != NULL) {
@@ -149,7 +149,7 @@ void buscar_direccion(House *lista, double *res_lat, double *res_lon) { // busca
         printf("Street not found. Did you mean: %s?\n", mejor_calle_nodo->street_name);
     }
     
-    if (casa_elegida != NULL) { // si la encuentra, devuelve las coordenadas
+    if (casa_elegida != NULL) { // Si la encuentra, devuelve las coordenadas
         printf("\n    Found at (%lf, %lf)\n", casa_elegida->latitud, casa_elegida->longitud);
         *res_lat = casa_elegida->latitud;
         *res_lon = casa_elegida->longitud;
@@ -159,9 +159,9 @@ void buscar_direccion(House *lista, double *res_lat, double *res_lon) { // busca
     }
 }
 
-// funciones para la gestión de lugares
+// Funciones para la gestión de lugares
 
-Place* add_lugar(Place *cabeza, char *name, double lat, double lon) { // añade un lugar a la lista enlazada de lugares
+Place* add_lugar(Place *cabeza, char *name, double lat, double lon) { // Añade un lugar a la lista enlazada de lugares
     Place *nuevo = (Place*)malloc(sizeof(Place));
     if (nuevo == NULL) return cabeza;
 
@@ -172,7 +172,7 @@ Place* add_lugar(Place *cabeza, char *name, double lat, double lon) { // añade 
     return nuevo;
 }
 
-Place* cargar_lugares(char *path, int *total) { // carga los lugares desde el archivo
+Place* cargar_lugares(char *path, int *total) { // Carga los lugares desde el archivo
     FILE *f = fopen(path, "r");
     if (f == NULL) return NULL;
 
@@ -193,7 +193,7 @@ Place* cargar_lugares(char *path, int *total) { // carga los lugares desde el ar
     return cabeza;
 }
 
-void buscar_lugar(Place *lista, double *res_lat, double *res_lon) { // busca un lugar por su nombre y devuelve coordenadas
+void buscar_lugar(Place *lista, double *res_lat, double *res_lon) { // Busca un lugar por su nombre y devuelve coordenadas
     char search_name[150];
     char search_name_normalizado[150];
     
@@ -211,7 +211,7 @@ void buscar_lugar(Place *lista, double *res_lat, double *res_lon) { // busca un 
     int min_dist = 100;
     Place *lugar_elegido = NULL;
 
-    while (actual != NULL) { // buscamos el lugar que coincida con el nombre
+    while (actual != NULL) { // Buscamos el lugar que coincida con el nombre
         char place_sin_acentos[150];
         strcpy(place_sin_acentos, actual->name);
         quitar_acentos(place_sin_acentos); 
@@ -223,7 +223,7 @@ void buscar_lugar(Place *lista, double *res_lat, double *res_lon) { // busca un 
             }
         }
 
-        int d = distancia_levenshtein(search_name, actual->name); // calculamos el lugar más parecido si el usuario se equivoca
+        int d = distancia_levenshtein(search_name, actual->name); // Calculamos el lugar más parecido si el usuario se equivoca
         if (d < min_dist) {
             min_dist = d;
             mejor_lugar = actual;
@@ -231,11 +231,11 @@ void buscar_lugar(Place *lista, double *res_lat, double *res_lon) { // busca un 
         actual = actual->next;
     }
 
-    if (num_coincidencias == 1) { // si coincide, lo printamos directamente
+    if (num_coincidencias == 1) { // Si coincide, lo printamos directamente
         lugar_elegido = coincidencias[0];
         printf("\n    Found at (%lf, %lf)\n", lugar_elegido->latitud, lugar_elegido->longitud);
     } 
-    else if (num_coincidencias > 1) { // si hay varias coincidencias, se las mostramos al usuario para que elija (ej. bon area)
+    else if (num_coincidencias > 1) { // Si hay varias coincidencias, se las mostramos al usuario para que elija (ej. bon area)
         printf("\nMultiple places found with that name:\n");
 
         for (int i = 0; i < num_coincidencias; i++) { 
@@ -253,7 +253,7 @@ void buscar_lugar(Place *lista, double *res_lat, double *res_lon) { // busca un 
         lugar_elegido = coincidencias[seleccion - 1];
         printf("\n    Selected: %s at (%lf, %lf)\n", lugar_elegido->name, lugar_elegido->latitud, lugar_elegido->longitud);
     } 
-    else if (mejor_lugar != NULL && min_dist < 10) { // si no hay coincidencias, elige un lugar parecido
+    else if (mejor_lugar != NULL && min_dist < 10) { // Si no hay coincidencias, elige un lugar parecido
         lugar_elegido = mejor_lugar; 
         printf("Place not found. Did you mean: %s?\n", lugar_elegido->name);
         printf("\n    Found at (%lf, %lf)\n", lugar_elegido->latitud, lugar_elegido->longitud);
@@ -262,7 +262,7 @@ void buscar_lugar(Place *lista, double *res_lat, double *res_lon) { // busca un 
         printf("Place not found.\n");
     }
 
-    // devolvemos las coordenadas o 0,0 si no se ha encontrado el lugar
+    // Devolvemos las coordenadas o 0,0 si no se ha encontrado el lugar
     if (lugar_elegido != NULL) {
         *res_lat = lugar_elegido->latitud;
         *res_lon = lugar_elegido->longitud;
@@ -272,12 +272,12 @@ void buscar_lugar(Place *lista, double *res_lat, double *res_lon) { // busca un 
     }
 }
 
-// gestion de coordenadas y calles
+// Gestión de coordenadas y calles
 
 #define EARTH_RADIUS 6371000.0 
 #define TO_RAD (3.14159265358979323846 / 180.0) 
 
-double haversine(double lat1, double lon1, double lat2, double lon2) { // calcula distancia entre dos coordenadas usando harversine
+double haversine(double lat1, double lon1, double lat2, double lon2) { // Calcula distancia entre dos coordenadas usando harversine
     double dLat = (lat2 - lat1) * TO_RAD;
     double dLon = (lon2 - lon1) * TO_RAD;
     double lat1_rad = lat1 * TO_RAD;
@@ -290,7 +290,7 @@ double haversine(double lat1, double lon1, double lat2, double lon2) { // calcul
     return EARTH_RADIUS * c;
 }
 
-//añade una calle a la lista de calles
+// Añade una calle a la lista de calles
 Street* add_street(Street *cabeza, long long id1, double lat1, double lon1, long long id2, double lat2, double lon2, char *name) {
     Street *nueva = (Street*)malloc(sizeof(Street));
     if (nueva == NULL) return cabeza;
@@ -307,7 +307,7 @@ Street* add_street(Street *cabeza, long long id1, double lat1, double lon1, long
     return nueva;
 }
 
-// carga las calles desde el archivo
+// Carga las calles desde el archivo
 Street* cargar_streets_con_hash(char *path, int *total, StreetHashMap *map) {
     FILE *f = fopen(path, "r");
     if (f == NULL) return NULL;
@@ -341,7 +341,7 @@ Street* cargar_streets_con_hash(char *path, int *total, StreetHashMap *map) {
                 cabeza = nueva;
                 (*total)++;
 
-                // ¡AQUÍ SE INSTANCIA EN LA HASH EN O(1)!
+                // Aquí se instancia la hash en O(1)
                 hash_insertar(map, id1, id2, nombre_calle);
             }
         }
@@ -350,7 +350,7 @@ Street* cargar_streets_con_hash(char *path, int *total, StreetHashMap *map) {
     return cabeza;
 }
 
-// Versión antigua de buscar_coordenadas, del lab 4. (se le ha modificado el nombre para que no haya conflicto)
+// Versión antigua de buscar_coordenadas, del lab 4 (se le ha modificado el nombre para que no haya conflicto)
 void buscar_coordenada_antigua(Street *lista_streets, House *lista_casas, double user_lat, double user_lon) {
     if (lista_streets == NULL) return;
 
@@ -358,7 +358,7 @@ void buscar_coordenada_antigua(Street *lista_streets, House *lista_casas, double
     Street *closest = NULL;
     double min_dist = -1.0;
 
-    // encuentra la calle más cercana
+    // Encuentra la calle más cercana
     while (actual != NULL) {
         double real_mid_lat = (actual->lat1 + actual->lat2) / 2.0;
         double real_mid_lon = (actual->lon1 + actual->lon2) / 2.0;
@@ -373,7 +373,7 @@ void buscar_coordenada_antigua(Street *lista_streets, House *lista_casas, double
     
     if (closest == NULL) return;
 
-    // printa la calle más cercana y sus adyacentes
+    // Printa la calle más cercana y sus adyacentes
     printf("    Closest street: %s\n", closest->street_name);
     printf("    Between %lld (%lf, %lf) and %lld (%lf, %lf)\n", 
            closest->id1, closest->lat1, closest->lon1, 
@@ -418,7 +418,7 @@ void buscar_coordenada_antigua(Street *lista_streets, House *lista_casas, double
                             break;
                         }
                     }
-                    // si no existe en las sugerencias, lo añadimos y printamos
+                    // Si no existe en las sugerencias, lo añadimos y printamos
                     if (!ya_existe && num_sugeridas < 30) {
                         strcpy(calles_sugeridas[num_sugeridas], nombre_vecino);
                         num_sugeridas++;
@@ -432,15 +432,15 @@ void buscar_coordenada_antigua(Street *lista_streets, House *lista_casas, double
     printf("\n");
 }
 
-// grafos y dijkstra
+// Grafos y dijkstra
 
-int buscar_o_insertar_nodo(Grafo *g, long long id, double lat, double lon) { // funcion que añade o busca un nodo por id
-    for (int i = 0; i < g->total_nodos; i++) { // si existe el nodo, devuelve su indice
+int buscar_o_insertar_nodo(Grafo *g, long long id,double lat, double lon) { // Funcion que añade o busca un nodo por id
+    for (int i = 0; i < g->total_nodos; i++) { // Si existe el nodo, devuelve su indice
         if (g->nodos[i].id == id) {
             return i; 
         }
     }
-    // sino, lo añade al grafo
+    // Sino, lo añade al grafo
     g->total_nodos++;
     g->nodos = (NodoGrafo *)realloc(g->nodos, g->total_nodos * sizeof(NodoGrafo));
     if (g->nodos == NULL) {
@@ -469,7 +469,7 @@ void añadir_adyacencia(NodoGrafo *nodo, int destino, double peso) { // añade u
     nodo->vecinos[nodo->num_vecinos - 1].peso = peso;
 }
 
-Grafo construir_grafo(Street *lista_streets) { // construye el grafo a partir de la lista de calles
+Grafo construir_grafo(Street *lista_streets) { // Construye el grafo a partir de la lista de calles
     Grafo g;
     g.nodos = NULL;
     g.total_nodos = 0;
@@ -490,7 +490,7 @@ Grafo construir_grafo(Street *lista_streets) { // construye el grafo a partir de
     return g; 
 }
 
-long long buscar_nodo_mas_cercano(Grafo *g, double lat, double lon) { // busca el nodo del grafo más cercano a unas coordenadas
+long long buscar_nodo_mas_cercano(Grafo *g, double lat, double lon) { // Busca el nodo del grafo más cercano a unas coordenadas
     if (g == NULL || g->total_nodos == 0) return -1;
 
     long long id_mejor = g->nodos[0].id;
@@ -511,14 +511,14 @@ long long buscar_nodo_mas_cercano(Grafo *g, double lat, double lon) { // busca e
     return id_mejor;
 } 
 
-int obtener_indice_nodo(Grafo *g, long long id) { //encuentra el índice de un nodo en el grafo a partir de su id
+int obtener_indice_nodo(Grafo *g, long long id) { // Encuentra el índice de un nodo en el grafo a partir de su id
     for (int i = 0; i < g->total_nodos; i++) {
         if (g->nodos[i].id == id) return i;
     }
     return -1;
 }
 
-double toRadians(double degree) { // pasa d grados a radiantes
+double toRadians(double degree) { // Pasa d grados a radiantes
     return degree * (3.14159265358979323846 / 180.0);
 }
 
@@ -532,7 +532,7 @@ void latlon_to_xy(double lat_ref, double lon_ref,
     *y = EARTH_RADIUS_KM * dlat;
 }
 
-void imprimir_instrucciones_giros_hash(Grafo *g, StreetHashMap *map, int *camino, int tam_camino) { // imprime la ruta con las instrucciones
+void imprimir_instrucciones_giros_hash(Grafo *g, StreetHashMap *map, int *camino, int tam_camino) { // Imprime la ruta con las instrucciones
     if (tam_camino < 2) {
         printf("Ya estás en el destino.\n");
         return;
@@ -543,7 +543,7 @@ void imprimir_instrucciones_giros_hash(Grafo *g, StreetHashMap *map, int *camino
     char raw_calle_actual[100] = "";
     char raw_calle_siguiente[100] = "";
 
-    // coge el nombre de la calle actual
+    // Coge el nombre de la calle actual
     const char *nombre_hash = hash_buscar(map, g->nodos[camino[0]].id, g->nodos[camino[1]].id);
     if (nombre_hash != NULL) {
         strncpy(raw_calle_actual, nombre_hash, 99);
@@ -556,13 +556,13 @@ void imprimir_instrucciones_giros_hash(Grafo *g, StreetHashMap *map, int *camino
 
     double distancia_acumulada = 0.0;
 
-    // por cada tramo, calcula la distancia, el nombre de la proxima calle y el giro. Luego lo printa
+    // Por cada tramo, calcula la distancia, el nombre de la proxima calle y el giro. Luego lo printa
     for (int i = 0; i < tam_camino - 1; i++) {
         int nodo_act = camino[i];
         int nodo_sig = camino[i + 1];
 
         double dist_tramo = 0.0;
-        for (int v = 0; v < g->nodos[nodo_act].num_vecinos; v++) { // buscamos los vecinos del nodo actual
+        for (int v = 0; v < g->nodos[nodo_act].num_vecinos; v++) { // Buscamos los vecinos del nodo actual
             if (g->nodos[nodo_act].vecinos[v].nodo_destino == nodo_sig) { 
                 dist_tramo = g->nodos[nodo_act].vecinos[v].peso;
                 break;
@@ -570,14 +570,14 @@ void imprimir_instrucciones_giros_hash(Grafo *g, StreetHashMap *map, int *camino
         }
         distancia_acumulada += dist_tramo; // acumulamos la distancia
 
-        // si es el último tramo, printa que ya llegas al destino
+        // Si es el último tramo, printa que ya llegas al destino
         if (i == tam_camino - 2) {
             printf("  Continue straight for %.0fm and you will arrive at your destination.\n", distancia_acumulada);
         }
-        else { // si no, calculamos el nombre de la siguiente calle y el giro
+        else { // Si no, calculamos el nombre de la siguiente calle y el giro
             int nodo_sig_sig = camino[i + 2];
             
-            // consigue el nombre de la calle siguiente
+            // Consigue el nombre de la calle siguiente
             const char *nombre_sig_hash = hash_buscar(map, g->nodos[nodo_sig].id, g->nodos[nodo_sig_sig].id);
             if (nombre_sig_hash != NULL) {
                 strncpy(raw_calle_siguiente, nombre_sig_hash, 99);
@@ -587,7 +587,7 @@ void imprimir_instrucciones_giros_hash(Grafo *g, StreetHashMap *map, int *camino
 
             normalizar_nombre(calle_siguiente_norm, sizeof(calle_siguiente_norm), raw_calle_siguiente);
 
-            // si el nombre de la calle siguiente es distinto al de la calle actual, calculamos el giro
+            // Si el nombre de la calle siguiente es distinto al de la calle actual, calculamos el giro
             if (strcasecmp(calle_actual_norm, calle_siguiente_norm) != 0) {
                 double Ax, Ay, Bx, By, Cx, Cy;
                 double lat_ref = g->nodos[nodo_act].latitud;
@@ -615,7 +615,7 @@ void imprimir_instrucciones_giros_hash(Grafo *g, StreetHashMap *map, int *camino
     }
 }
 
-// calcula la ruta con dijkstra (actualmente usamos bfs)
+// Calcula la ruta con dijkstra (actualmente usamos bfs)
 void calcular_ruta_dijkstra(Grafo *g, long long id_origen, long long id_destino) {
     int idx_origen = obtener_indice_nodo(g, id_origen);
     int idx_destino = obtener_indice_nodo(g, id_destino);
@@ -690,9 +690,9 @@ void calcular_ruta_dijkstra(Grafo *g, long long id_origen, long long id_destino)
 
 
 
-// funciones que liberan la memoria
+// Funciones que liberan la memoria
 
-void liberar_lista(House *lista) { // libera la memoria de la lista de casas
+void liberar_lista(House *lista) { // Libera la memoria de la lista de casas
     while (lista) {
         House *temp = lista;
         lista = lista->next;
@@ -700,7 +700,7 @@ void liberar_lista(House *lista) { // libera la memoria de la lista de casas
     }
 }
 
-void liberar_lugares(Place *lista) { // libera la memoria de la lista de lugares
+void liberar_lugares(Place *lista) { // Libera la memoria de la lista de lugares
     while (lista) {
         Place *temp = lista;
         lista = lista->next;
@@ -708,7 +708,7 @@ void liberar_lugares(Place *lista) { // libera la memoria de la lista de lugares
     }
 }
 
-void liberar_streets(Street *lista) { // libera la memoria de la lista de calles
+void liberar_streets(Street *lista) { // Libera la memoria de la lista de calles
     while (lista) {
         Street *temp = lista;
         lista = lista->next;
@@ -716,7 +716,7 @@ void liberar_streets(Street *lista) { // libera la memoria de la lista de calles
     }
 }
 
-void liberar_grafo(Grafo *g) { // libera la memoria del grafo, incluyendo los nodos y adyacencias
+void liberar_grafo(Grafo *g) { // Libera la memoria del grafo, incluyendo los nodos y adyacencias
     if (g->nodos != NULL) {
         for (int i = 0; i < g->total_nodos; i++) {
             if (g->nodos[i].vecinos != NULL) {
@@ -729,7 +729,7 @@ void liberar_grafo(Grafo *g) { // libera la memoria del grafo, incluyendo los no
     g->total_nodos = 0;
 }
 
-void quitar_acentos(char *cadena) { // función que quita los acentos de un string (por ej. una calle)
+void quitar_acentos(char *cadena) { // Función que quita los acentos de un string (por ej. una calle)
     const char *con_acento[] = {"á","à","Á","À","é","è","É","È","í","ì","Í","Ì","ó","ò","Ó","Ò","ú","ù","Ú","Ù","ñ","Ñ","ç","Ç"};
     const char *sin_acento[] = {"a","a","A","A","e","e","E","E","i","i","I","I","o","o","O","O","u","u","U","U","n","N","c","C"};
     int num_letras = 24; 
@@ -738,16 +738,16 @@ void quitar_acentos(char *cadena) { // función que quita los acentos de un stri
 
     while (cadena[i] != '\0') {
         int encontrado = 0;
-        for (int k = 0; k < num_letras; k++) { // compara cada letra con acento con la letra actual de la cadena
+        for (int k = 0; k < num_letras; k++) { // Compara cada letra con acento con la letra actual de la cadena
             if (cadena[i] == con_acento[k][0] && cadena[i+1] == con_acento[k][1]) { 
                 cadena[j] = sin_acento[k][0]; 
-                i = i + 2; // sumamos dos porque las letras con acento ocupan dos bytes
-                j = j + 1; // sumamos uno porque la letra sin acento ocupa un byte
-                encontrado = 1; // marca el booleano como true
+                i = i + 2; // Sumamos dos porque las letras con acento ocupan dos bytes
+                j = j + 1; // Sumamos uno porque la letra sin acento ocupa un byte
+                encontrado = 1; // Marca el booleano como true
                 break; 
             }
         }
-        if (encontrado == 0) { // si no hay acentos, copiamos el caracter tal cual
+        if (encontrado == 0) { // Si no hay acentos, copiamos el caracter tal cual
             cadena[j] = cadena[i]; 
             i++; j++;
         }
@@ -755,14 +755,14 @@ void quitar_acentos(char *cadena) { // función que quita los acentos de un stri
     cadena[j] = '\0';  
 }
 
-void normalizar_nombre(char *dest, size_t dest_size, const char *src) { // normaliza un string unificando abreviaturas
+void normalizar_nombre(char *dest, size_t dest_size, const char *src) { // Normaliza un string unificando abreviaturas
     if (!dest || dest_size == 0) return;
     if (!src) { dest[0] = '\0'; return; }
 
     const char *rest = src;
     const char *prefix_out = NULL;
 
-    // comprueba diferentes abreviaturas y las unifica, guardando el resto del nombre en "rest"
+    // Comprueba diferentes abreviaturas y las unifica, guardando el resto del nombre en "rest"
     if (strncasecmp(src, "C. de ", 6) == 0 || strncasecmp(src, "C/ de ", 6) == 0) { prefix_out = "Carrer "; rest = src + 6; }
     else if (strncasecmp(src, "Carrer de ", 10) == 0) { prefix_out = "Carrer "; rest = src + 10; }
     else if (strncasecmp(src, "C. ", 3) == 0 || strncasecmp(src, "C/ ", 3) == 0) { prefix_out = "Carrer "; rest = src + 3; }
@@ -785,13 +785,13 @@ void normalizar_nombre(char *dest, size_t dest_size, const char *src) { // norma
     else if (strncasecmp(src, "Rbla de ", 8) == 0) { prefix_out = "Rambla "; rest = src + 8; }
     else if (strncasecmp(src, "Rambla de ", 10) == 0) { prefix_out = "Rambla "; rest = src + 10; }
 
-    if (prefix_out) snprintf(dest, dest_size, "%s%s", prefix_out, rest); // si hay prefijo, lo añadimos al principio del nombre
-    else snprintf(dest, dest_size, "%s", src);  // si no, copiamos el nombre tal cual
+    if (prefix_out) snprintf(dest, dest_size, "%s%s", prefix_out, rest); // Si hay prefijo, lo añadimos al principio del nombre
+    else snprintf(dest, dest_size, "%s", src);  // Si no, copiamos el nombre tal cual
 
-    quitar_acentos(dest); // quita los acentos del nombre
+    quitar_acentos(dest); // Quita los acentos del nombre
 }
 
-void leer_cadena_segura(char *buffer, int size) { // lee una cadena de forma segura
+void leer_cadena_segura(char *buffer, int size) { // Lee una cadena de forma segura
     if (fgets(buffer, size, stdin) != NULL) {
         size_t len = strlen(buffer);
         if (len > 0 && buffer[len - 1] == '\n') {
@@ -802,18 +802,18 @@ void leer_cadena_segura(char *buffer, int size) { // lee una cadena de forma seg
     }
 }
 
-void normalizar_coordenadas_string(char *buffer) { // normaliza el string de coordenadas
+void normalizar_coordenadas_string(char *buffer) { // Normaliza el string de coordenadas
 
     for (int i = 0; buffer[i] != '\0'; i++) {
-        if (buffer[i] == ',' && buffer[i+1] == ' ') { buffer[i] = ' '; }  // si hay una coma seguida de espacio, lo cambiamos por espacio
-        else if (buffer[i] == ';') { buffer[i] = ' '; } // si hay un punto y coma, lo cambiamos por espacio
+        if (buffer[i] == ',' && buffer[i+1] == ' ') { buffer[i] = ' '; }  // Si hay una coma seguida de espacio, lo cambiamos por espacio
+        else if (buffer[i] == ';') { buffer[i] = ' '; } // Si hay un punto y coma, lo cambiamos por espacio
     }
-    for (int i = 0; buffer[i] != '\0'; i++) { // si hay una coma, lo cambiamos por punto 
-        if (buffer[i] == ',') { buffer[i] = '.'; } // si hay un punto, lo dejamos igual
+    for (int i = 0; buffer[i] != '\0'; i++) { // Si hay una coma, lo cambiamos por punto 
+        if (buffer[i] == ',') { buffer[i] = '.'; } // Si hay un punto, lo dejamos igual
     }
 }
 
-void pedir_coordenadas_seguras(double *lat, double *lon) { // pide las coordenadas de forma segura
+void pedir_coordenadas_seguras(double *lat, double *lon) { // Pide las coordenadas de forma segura
     char buffer[150];
     while (1) {
         printf("Enter your coordinates (latitud longitud): ");
@@ -824,17 +824,17 @@ void pedir_coordenadas_seguras(double *lat, double *lon) { // pide las coordenad
 
         normalizar_coordenadas_string(buffer);
 
-        if (sscanf(buffer, "%lf %lf", lat, lon) != 2) { // si no se pudieron leer dos números, el formato es inválido
+        if (sscanf(buffer, "%lf %lf", lat, lon) != 2) { // Si no se pudieron leer dos números, el formato es inválido
             printf("    [Error] Invalid input. Please enter two valid numbers.\n");
             continue; 
         }
 
-        //si la latitud no existe, pero la longitud sí, lo giramos por si el usuario se ha equivocado de orden
+        // Si la latitud no existe, pero la longitud sí, lo giramos por si el usuario se ha equivocado de orden
         if (*lat < -90.0 || *lat > 90.0) {
             double temp = *lat; *lat = *lon; *lon = temp;
             printf("    [Info] Swapped inputs to match (Latitude, Longitude) format.\n");
         }
-        // ahora comprobamos si las coordenadas están dentro de los límites válidos
+        // Ahora comprobamos si las coordenadas están dentro de los límites válidos
         if (*lat < -90.0 || *lat > 90.0 || *lon < -180.0 || *lon > 180.0) {
             printf("    [Error] Coordinates out of bounds. Lat must be [-90, 90] and Lon [-180, 180].\n");
             continue; 
@@ -843,22 +843,22 @@ void pedir_coordenadas_seguras(double *lat, double *lon) { // pide las coordenad
     }
 }
 
-int mapa_valido(const char *m) { // comprueba si el mapa introducido coincide con uno existente
+int mapa_valido(const char *m) { // Comprueba si el mapa introducido coincide con uno existente
     return strcmp(m, "xs_1") == 0 || strcmp(m, "xs_2") == 0 ||
            strcmp(m, "md_1") == 0 || strcmp(m, "lg_1") == 0 ||
            strcmp(m, "xl_1") == 0 || strcmp(m, "2xl_1") == 0;
 }
 
-void init_queue(Queue *q) { // inicializa la cola
+void init_queue(Queue *q) { // Inicializa la cola
     q->front = NULL;
     q->rear = NULL;
 }
 
-int queue_is_empty(Queue *q) { // comprueba si la cola está vacía
+int queue_is_empty(Queue *q) { // Comprueba si la cola está vacía
     return (q->front == NULL);
 }
 
-void enqueue(Queue *q, int *path_array, int len) { //añade un camino a la cola
+void enqueue(Queue *q, int *path_array, int len) { // Añade un camino a la cola
     QueueNode *nuevo = (QueueNode *)malloc(sizeof(QueueNode));
     nuevo->path = (int *)malloc(len * sizeof(int));
     memcpy(nuevo->path, path_array, len * sizeof(int));
@@ -873,7 +873,7 @@ void enqueue(Queue *q, int *path_array, int len) { //añade un camino a la cola
     q->rear = nuevo;
 }
 
-void dequeue(Queue *q, int **path_out, int *len_out) { // quita el primer camino de la cola.
+void dequeue(Queue *q, int **path_out, int *len_out) { // Quita el primer camino de la cola.
     if (queue_is_empty(q)) return;
     
     QueueNode *temp = q->front;
@@ -893,12 +893,12 @@ void calcular_ruta_bfs(Grafo *g, StreetHashMap *map, long long id_origen, long l
     int idx_origen = obtener_indice_nodo(g, id_origen);
     int idx_destino = obtener_indice_nodo(g, id_destino);
 
-    if (idx_origen == -1 || idx_destino == -1) { // si no se encuentran los nodos, no se puede calcular la ruta
+    if (idx_origen == -1 || idx_destino == -1) { // Si no se encuentran los nodos, no se puede calcular la ruta
         printf("Error: Nodos no encontrados en el grafo.\n");
         return;
     }
 
-    int *visitado = (int *)calloc(g->total_nodos, sizeof(int)); // crea un array para guardar los nodos
+    int *visitado = (int *)calloc(g->total_nodos, sizeof(int)); // Crea un array para guardar los nodos
 
     Queue Q;
     init_queue(&Q);
@@ -908,7 +908,7 @@ void calcular_ruta_bfs(Grafo *g, StreetHashMap *map, long long id_origen, long l
     int *mejor_camino = NULL;
     int mejor_tam = 0;
 
-    while (!queue_is_empty(&Q)) { // mientras la cola no esté vacía, seguimos buscando caminos
+    while (!queue_is_empty(&Q)) { // Mientras la cola no esté vacía, seguimos buscando caminos
         int *path;
         int len;
         
@@ -922,14 +922,14 @@ void calcular_ruta_bfs(Grafo *g, StreetHashMap *map, long long id_origen, long l
             break;
         }
 
-        if (!visitado[current_node]) { // si el nodo actual no ha sido visitado, lo marcamos como visitado y seguimos buscando
+        if (!visitado[current_node]) { // Si el nodo actual no ha sido visitado, lo marcamos como visitado y seguimos buscando
             visitado[current_node] = 1;
 
-            // itera por cada vecino
+            // Itera por cada vecino
             for (int i = 0; i < g->nodos[current_node].num_vecinos; i++) { 
                 int connected_node = g->nodos[current_node].vecinos[i].nodo_destino;
 
-                if (!visitado[connected_node]) { // si no ha sido visitado, añadimos un nuevo camino a la cola
+                if (!visitado[connected_node]) { // Si no ha sido visitado, añadimos un nuevo camino a la cola
                     int *new_path = (int *)malloc((len + 1) * sizeof(int));
                     memcpy(new_path, path, len * sizeof(int));
                     new_path[len] = connected_node;
@@ -943,15 +943,15 @@ void calcular_ruta_bfs(Grafo *g, StreetHashMap *map, long long id_origen, long l
         free(path); 
     }
 
-    if (mejor_camino != NULL) { // si se ha encontrado un camino, lo imprimimos
+    if (mejor_camino != NULL) { // Si se ha encontrado un camino, lo imprimimos
         printf("\n--- ROUTE ---\n");
         imprimir_instrucciones_giros_hash(g, map, mejor_camino, mejor_tam);
         free(mejor_camino);
-    } else { // si no se ha encontrado ningún camino, indicamos que no existe una ruta transitable
+    } else { // Si no se ha encontrado ningún camino, indicamos que no existe una ruta transitable
         printf("No existe una ruta transitable entre los dos puntos seleccionados.\n");
     }
 
-    while (!queue_is_empty(&Q)) { // liberamos la memoria
+    while (!queue_is_empty(&Q)) { // Liberamos la memoria
         int *path_res;
         int len_res;
         dequeue(&Q, &path_res, &len_res);
@@ -961,12 +961,12 @@ void calcular_ruta_bfs(Grafo *g, StreetHashMap *map, long long id_origen, long l
     free(visitado);
 }
 
-unsigned int calcular_hash(long long id1, long long id2) { // funcion que calcula el hash de dos ids de nodos
+unsigned int calcular_hash(long long id1, long long id2) { // Funcion que calcula el hash de dos ids de nodos
     // Ordenamos los ids 
     long long menor = (id1 < id2) ? id1 : id2;
     long long mayor = (id1 < id2) ? id2 : id1;
     
-    unsigned long long h = 1125899906842597ULL; // elegimos un valor primo grande para usar como base
+    unsigned long long h = 1125899906842597ULL; // Elegimos un valor primo grande para usar como base
     h = h * 31 + menor;
     h = h * 31 + mayor;
     
@@ -1000,14 +1000,14 @@ const char* hash_buscar(StreetHashMap *map, long long id1, long long id2) {
         long long act_mayor = (actual->id1 < actual->id2) ? actual->id2 : actual->id1;
         
         if (act_menor == menor && act_mayor == mayor) {
-            return actual->street_name; // si encontramos la calle, devolvemos su nombre
+            return actual->street_name; // Si encontramos la calle, devolvemos su nombre
         }
         actual = actual->next;
     }
-    return NULL; // si no se encuentra la calle, devolvemos NULL
+    return NULL; // Si no se encuentra la calle, devolvemos NULL
 }
 
-void hash_liberar(StreetHashMap *map) { // libera la memoria de la tabla hash
+void hash_liberar(StreetHashMap *map) { // Libera la memoria de la tabla hash
     for (int i = 0; i < HASH_SIZE; i++) {
         HashNode *actual = map->buckets[i];
         while (actual != NULL) {

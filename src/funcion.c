@@ -75,7 +75,7 @@ void buscar_coordenada(Grafo *g, StreetHashMap *map, double user_lat, double use
         }
     }
     
-    if (num_sugeridas == 0) { // si no se encuentran calles vecinas, printamos un mensaje
+    if (num_sugeridas == 0) { // si no se encuentran calles vecinas, se muestra un mensaje
         printf("         - No distinct connecting streets found.\n");
     }
     printf("\n");

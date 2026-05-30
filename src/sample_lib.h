@@ -56,12 +56,12 @@ typedef struct {
 
 // Estructuras para el grafo y la cola de BFS
 
-typedef struct { // estructura para saber las calles adyacentes a cada nodo del grafo
+typedef struct { // Estructura para saber las calles adyacentes a cada nodo del grafo
     int nodo_destino;      
     double peso;           
 } Adyacencia;
 
-typedef struct { // estructura de cada nodo del grafo
+typedef struct { // Estructura de cada nodo del grafo
     long long id;          
     double latitud;
     double longitud;
@@ -69,23 +69,23 @@ typedef struct { // estructura de cada nodo del grafo
     int num_vecinos;       
 } NodoGrafo;
 
-typedef struct { // estructura del grafo completo
+typedef struct { // Estructura del grafo completo
     NodoGrafo *nodos;      
     int total_nodos;       
 } Grafo;
 
-typedef struct QueueNode { // estructura de cada nodo de la cola para BFS
+typedef struct QueueNode { // Estructura de cada nodo de la cola para BFS
     int *path;             
     int path_len;
     struct QueueNode *next;
 } QueueNode;
 
-typedef struct { // estructura de la cola para BFS
+typedef struct { // Estructura de la cola para BFS
     QueueNode *front;
     QueueNode *rear;
 } Queue;
 
-typedef struct position { // estructura para almacenar unas coordenadas
+typedef struct position { // Estructura para almacenar unas coordenadas
   double lat;
   double lon;
 } Position;
@@ -108,7 +108,7 @@ Street* cargar_streets(char *path, int *total);
 
 // Version anterior del lab4 (en sample_lib.c)
 void buscar_coordenada_antigua(Street *lista_streets, House *lista_casas, double user_lat, double user_lon);
-// Nueva version del lab5 (está en funcion.c y es la que se usa en el programa)
+// Nueva version a partir del lab5 (está en funcion.c y es la que se usa en el programa)
 void buscar_coordenada(Grafo *g, StreetHashMap *map, double user_lat, double user_lon);
 
 void liberar_streets(Street *lista);
@@ -128,7 +128,7 @@ void añadir_adyacencia(NodoGrafo *nodo, int destino, double peso);
 void liberar_grafo(Grafo *g);
 long long buscar_nodo_mas_cercano(Grafo *g, double lat, double lon); 
 
-// funciones de hash
+// Funciones de hash
 unsigned int calcular_hash(long long id1, long long id2);
 void hash_insertar(StreetHashMap *map, long long id1, long long id2, const char *name);
 const char* hash_buscar(StreetHashMap *map, long long id1, long long id2);
